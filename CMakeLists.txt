@@ -54,6 +54,9 @@ endif()
 add_library(me_platform STATIC src/platform/mapped_file_${ME_PLATFORM}.cpp)
 target_include_directories(me_platform PUBLIC "${PROJECT_SOURCE_DIR}/src")
 me_strict_warnings(me_platform)
+add_executable(itch_parse src/parser_cli.cpp src/platform/cli_${ME_PLATFORM}.cpp)
+target_link_libraries(itch_parse PRIVATE me me_platform)
+me_strict_warnings(itch_parse)
 if(BUILD_TESTING)
   set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
   set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
@@ -84,10 +87,11 @@ if(BUILD_TESTING)
   gtest_discover_tests(mapping_tests DISCOVERY_MODE PRE_TEST PROPERTIES TIMEOUT 60)
   add_test(NAME python_tests COMMAND "${Python3_EXECUTABLE}" -m pytest
     -v -ra "${PROJECT_SOURCE_DIR}/tests/python"
+    --parser "$<TARGET_FILE:itch_parse>"
     --basetemp "${CMAKE_BINARY_DIR}/pytest-tmp"
     -o "cache_dir=${CMAKE_BINARY_DIR}/pytest-cache")
   set_tests_properties(python_tests PROPERTIES
-    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 120)
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 300)
 endif()
 
 if(ME_BUILD_BENCHMARKS)

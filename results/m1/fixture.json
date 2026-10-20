@@ -1,0 +1,22 @@
+{
+  "path": "tests/fixtures/synthetic.itch",
+  "source": "tests/fixtures/synthetic.json",
+  "generator": "python python/itch_writer.py tests/fixtures/synthetic.json tests/fixtures/synthetic.itch --end-session",
+  "bytes": 484,
+  "sha256": "24742d09e2ce22c134fd65abe68304c49ebe2f46cdc987756a04cac46c20698d",
+  "messages": 15,
+  "counts": {
+    "A": 2,
+    "C": 1,
+    "D": 2,
+    "E": 2,
+    "F": 1,
+    "P": 1,
+    "R": 2,
+    "S": 2,
+    "U": 1,
+    "X": 1
+  },
+  "synthetic": true,
+  "end_session": true
+}

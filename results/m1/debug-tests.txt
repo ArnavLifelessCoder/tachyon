@@ -1,0 +1,121 @@
+UpdateCTestConfiguration  from :C:/Users/arnav/Downloads/SDE PROJs/matching-engine/DartConfiguration.tcl
+UpdateCTestConfiguration  from :C:/Users/arnav/Downloads/SDE PROJs/matching-engine/build/debug/DartConfiguration.tcl
+Parse Config file:C:/Users/arnav/Downloads/SDE PROJs/matching-engine/build/debug/DartConfiguration.tcl
+Test project C:/Users/arnav/Downloads/SDE PROJs/matching-engine/build/debug
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 1
+    Start 1: Skeleton.BuildsWithCpp20
+
+1: Test command: "C:\Users\arnav\Downloads\SDE PROJs\matching-engine\build\debug\me_tests.exe" "--gtest_filter=Skeleton.BuildsWithCpp20" "--gtest_also_run_disabled_tests"
+1: Working Directory: C:/Users/arnav/Downloads/SDE PROJs/matching-engine/build/debug
+1: Test timeout computed to be: 60
+1: Running main() from C:\Users\arnav\Downloads\SDE PROJs\matching-engine\build\debug\_deps\googletest-src\googletest\src\gtest_main.cc
+1: Note: Google Test filter = Skeleton.BuildsWithCpp20
+1: [==========] Running 1 test from 1 test suite.
+1: [----------] Global test environment set-up.
+1: [----------] 1 test from Skeleton
+1: [ RUN      ] Skeleton.BuildsWithCpp20
+1: [       OK ] Skeleton.BuildsWithCpp20 (0 ms)
+1: [----------] 1 test from Skeleton (0 ms total)
+1: 
+1: [----------] Global test environment tear-down
+1: [==========] 1 test from 1 test suite ran. (0 ms total)
+1: [  PASSED  ] 1 test.
+1/2 Test #1: Skeleton.BuildsWithCpp20 .........   Passed    0.07 sec
+test 2
+    Start 2: python_tests
+
+2: Test command: "C:\Users\arnav\Downloads\SDE PROJs\matching-engine\.venv\Scripts\python.exe" "-m" "pytest" "-v" "-ra" "C:/Users/arnav/Downloads/SDE PROJs/matching-engine/tests/python" "--basetemp" "C:/Users/arnav/Downloads/SDE PROJs/matching-engine/build/debug/pytest-tmp" "-o" "cache_dir=C:/Users/arnav/Downloads/SDE PROJs/matching-engine/build/debug/pytest-cache"
+2: Working Directory: C:/Users/arnav/Downloads/SDE PROJs/matching-engine
+2: Test timeout computed to be: 120
+2: ============================= test session starts =============================
+2: platform win32 -- Python 3.13.15, pytest-8.3.5, pluggy-1.7.0 -- C:\Users\arnav\Downloads\SDE PROJs\matching-engine\.venv\Scripts\python.exe
+2: cachedir: build\debug\pytest-cache
+2: rootdir: C:\Users\arnav\Downloads\SDE PROJs\matching-engine
+2: configfile: pyproject.toml
+2: collecting ... collected 72 items
+2: 
+2: tests/python/test_download_itch.py::test_streams_checks_size_and_hash PASSED [  1%]
+2: tests/python/test_download_itch.py::test_explicit_size[None] PASSED      [  2%]
+2: tests/python/test_download_itch.py::test_explicit_size[31] PASSED        [  4%]
+2: tests/python/test_download_itch.py::test_reject_wrong_or_unverifiable_size[32-None] PASSED [  5%]
+2: tests/python/test_download_itch.py::test_reject_wrong_or_unverifiable_size[30-None] PASSED [  6%]
+2: tests/python/test_download_itch.py::test_reject_wrong_or_unverifiable_size[None-None] PASSED [  8%]
+2: tests/python/test_download_itch.py::test_reject_wrong_or_unverifiable_size[0-None] PASSED [  9%]
+2: tests/python/test_download_itch.py::test_reject_wrong_or_unverifiable_size[-1-None] PASSED [ 11%]
+2: tests/python/test_download_itch.py::test_reject_wrong_or_unverifiable_size[invalid-None] PASSED [ 12%]
+2: tests/python/test_download_itch.py::test_reject_wrong_or_unverifiable_size[31-2] PASSED [ 13%]
+2: tests/python/test_download_itch.py::test_invalid_expected_size_never_connects[0] PASSED [ 15%]
+2: tests/python/test_download_itch.py::test_invalid_expected_size_never_connects[-1] PASSED [ 16%]
+2: tests/python/test_download_itch.py::test_invalid_expected_size_never_connects[True] PASSED [ 18%]
+2: tests/python/test_download_itch.py::test_invalid_expected_size_never_connects[1.5] PASSED [ 19%]
+2: tests/python/test_download_itch.py::test_refuses_existing_files_before_network[day.gz] PASSED [ 20%]
+2: tests/python/test_download_itch.py::test_refuses_existing_files_before_network[day.gz.part] PASSED [ 22%]
+2: tests/python/test_download_itch.py::test_interrupted_download_cleans_partial PASSED [ 23%]
+2: tests/python/test_download_itch.py::test_http_failure_has_no_output PASSED [ 25%]
+2: tests/python/test_download_itch.py::test_output_created_during_download_is_preserved PASSED [ 26%]
+2: tests/python/test_fixture.py::test_committed_fixture_is_reproducible PASSED [ 27%]
+2: tests/python/test_fixture.py::test_writer_and_cutter_command_lines PASSED [ 29%]
+2: tests/python/test_fixture.py::test_download_command_line_help PASSED     [ 30%]
+2: tests/python/test_itch_writer.py::test_exact_wire_layout[S-fields0-O-12] PASSED [ 31%]
+2: tests/python/test_itch_writer.py::test_exact_wire_layout[R-fields1-AB      QN\x00\x00\x00dNC  TNN1N\x00\x00\x00\x00N-39] PASSED [ 33%]
+2: tests/python/test_itch_writer.py::test_exact_wire_layout[A-fields2-\x01\x02\x03\x04\x05\x06\x07\x08B\x11"3DAB      Ufw\x88-36] PASSED [ 34%]
+2: tests/python/test_itch_writer.py::test_exact_wire_layout[F-fields3-\x01\x02\x03\x04\x05\x06\x07\x08B\x11"3DAB      Ufw\x88TEST-40] PASSED [ 36%]
+2: tests/python/test_itch_writer.py::test_exact_wire_layout[E-fields4-\x01\x02\x03\x04\x05\x06\x07\x08\x11"3D\x11\x12\x13\x14\x15\x16\x17\x18-31] PASSED [ 37%]
+2: tests/python/test_itch_writer.py::test_exact_wire_layout[C-fields5-\x01\x02\x03\x04\x05\x06\x07\x08\x11"3D\x11\x12\x13\x14\x15\x16\x17\x18YUfw\x88-36] PASSED [ 38%]
+2: tests/python/test_itch_writer.py::test_exact_wire_layout[X-fields6-\x01\x02\x03\x04\x05\x06\x07\x08\x11"3D-23] PASSED [ 40%]
+2: tests/python/test_itch_writer.py::test_exact_wire_layout[D-fields7-\x01\x02\x03\x04\x05\x06\x07\x08-19] PASSED [ 41%]
+2: tests/python/test_itch_writer.py::test_exact_wire_layout[U-fields8-\x01\x02\x03\x04\x05\x06\x07\x08\x11\x12\x13\x14\x15\x16\x17\x18\x11"3DUfw\x88-35] PASSED [ 43%]
+2: tests/python/test_itch_writer.py::test_exact_wire_layout[P-fields9-\x01\x02\x03\x04\x05\x06\x07\x08B\x11"3DAB      Ufw\x88\x11\x12\x13\x14\x15\x16\x17\x18-44] PASSED [ 44%]
+2: tests/python/test_itch_writer.py::test_reject_invalid_price[-1] PASSED   [ 45%]
+2: tests/python/test_itch_writer.py::test_reject_invalid_price[4294967296] PASSED [ 47%]
+2: tests/python/test_itch_writer.py::test_reject_invalid_price[1.5] PASSED  [ 48%]
+2: tests/python/test_itch_writer.py::test_reject_invalid_price[True] PASSED [ 50%]
+2: tests/python/test_itch_writer.py::test_reject_invalid_price[100] PASSED  [ 51%]
+2: tests/python/test_itch_writer.py::test_reject_invalid_fields[stock_locate-65536] PASSED [ 52%]
+2: tests/python/test_itch_writer.py::test_reject_invalid_fields[tracking_number--1] PASSED [ 54%]
+2: tests/python/test_itch_writer.py::test_reject_invalid_fields[timestamp-281474976710656] PASSED [ 55%]
+2: tests/python/test_itch_writer.py::test_reject_invalid_fields[order_id-18446744073709551616] PASSED [ 56%]
+2: tests/python/test_itch_writer.py::test_reject_invalid_fields[shares--1] PASSED [ 58%]
+2: tests/python/test_itch_writer.py::test_reject_invalid_fields[stock-TOOLONG12X] PASSED [ 59%]
+2: tests/python/test_itch_writer.py::test_reject_invalid_fields[stock-\xe9] PASSED [ 61%]
+2: tests/python/test_itch_writer.py::test_reject_invalid_fields[stock-\n] PASSED [ 62%]
+2: tests/python/test_itch_writer.py::test_reject_invalid_fields[stock-] PASSED [ 63%]
+2: tests/python/test_itch_writer.py::test_reject_invalid_fields[side-BUY] PASSED [ 65%]
+2: tests/python/test_itch_writer.py::test_full_width_unsigned_boundaries PASSED [ 66%]
+2: tests/python/test_itch_writer.py::test_reject_unknown_or_missing_fields[event0] PASSED [ 68%]
+2: tests/python/test_itch_writer.py::test_reject_unknown_or_missing_fields[event1] PASSED [ 69%]
+2: tests/python/test_itch_writer.py::test_reject_unknown_or_missing_fields[event2] PASSED [ 70%]
+2: tests/python/test_itch_writer.py::test_reject_unknown_or_missing_fields[event3] PASSED [ 72%]
+2: tests/python/test_itch_writer.py::test_reject_unknown_or_missing_fields[event4] PASSED [ 73%]
+2: tests/python/test_itch_writer.py::test_stream_and_terminator PASSED      [ 75%]
+2: tests/python/test_itch_writer.py::test_raw_unknown_message PASSED        [ 76%]
+2: tests/python/test_itch_writer.py::test_reject_invalid_raw_frame[empty] PASSED [ 77%]
+2: tests/python/test_itch_writer.py::test_reject_invalid_raw_frame[oversized] PASSED [ 79%]
+2: tests/python/test_itch_writer.py::test_reject_invalid_raw_frame[not-bytes] PASSED [ 80%]
+2: tests/python/test_make_fixture.py::test_exact_prefix_raw_and_gzip[False] PASSED [ 81%]
+2: tests/python/test_make_fixture.py::test_exact_prefix_raw_and_gzip[True] PASSED [ 83%]
+2: tests/python/test_make_fixture.py::test_reject_truncation_and_early_session_end[] PASSED [ 84%]
+2: tests/python/test_make_fixture.py::test_reject_truncation_and_early_session_end[\x00] PASSED [ 86%]
+2: tests/python/test_make_fixture.py::test_reject_truncation_and_early_session_end[\x00\x03S] PASSED [ 87%]
+2: tests/python/test_make_fixture.py::test_reject_truncation_and_early_session_end[\x00\x00] PASSED [ 88%]
+2: tests/python/test_make_fixture.py::test_refuse_overwrite_and_same_file PASSED [ 90%]
+2: tests/python/test_make_fixture.py::test_size_cap_removes_partial_output PASSED [ 91%]
+2: tests/python/test_make_fixture.py::test_zero_messages_and_unread_truncated_tail PASSED [ 93%]
+2: tests/python/test_make_fixture.py::test_invalid_count[-1] PASSED         [ 94%]
+2: tests/python/test_make_fixture.py::test_invalid_count[True] PASSED       [ 95%]
+2: tests/python/test_make_fixture.py::test_invalid_count[1.5] PASSED        [ 97%]
+2: tests/python/test_make_fixture.py::test_corrupt_gzip_removes_output PASSED [ 98%]
+2: tests/python/test_skeleton.py::test_python_version PASSED                [100%]
+2: 
+2: ============================= 72 passed in 4.28s ==============================
+2/2 Test #2: python_tests .....................   Passed    5.25 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Total Test time (real) =   5.34 sec

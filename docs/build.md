@@ -1,6 +1,6 @@
 # Build and test
 
-Requirements: CMake 3.20+, Ninja, Python 3.11+, and either Visual Studio 2022 C++
+Requirements: CMake 3.21+, Ninja, Python 3.11+, and either Visual Studio 2022 C++
 Build Tools on Windows or GCC 12+/Clang 15+ on Linux. Initial CMake configuration
 needs network access to fetch GoogleTest. Google Benchmark is fetched only when
 `ME_BUILD_BENCHMARKS=ON`; there are no benchmark targets yet.
@@ -39,15 +39,59 @@ on Linux):
 
 Use `--gtest_list_tests` on the executable to list available case names.
 `ctest -R parser_tests` selects the complete suite, not one GoogleTest case.
-The local test helper enables `ITCH_PARSE_TRACE=1` for parser entry/return
+The local test helper enables `ITCH_PARSE_TRACE=1` and `ME_TRACE=1` for entry/return
 diagnostics and restores the previous setting afterward. For a direct parser
 invocation, set that environment variable explicitly when tracing is needed.
 
 Local ASan runs enable `ASAN_OPTIONS=verbosity=1` and write per-process diagnostic
 logs under `.local/review/` and `build/asan/.local/review/`, with timestamped
-prefixes. Existing options are restored after the run. If a process-exit timeout
-recurs, retain and inspect these logs before considering another run; do not
-hide it with an increased timeout or a sanitizer suppression.
+prefixes. Diagnostic settings are applied only to child processes, preserving
+the calling environment.
+
+### Sanitizer gate and Windows exit stalls (M3 onward)
+
+Linux CI ASan + UBSan on **both GCC and Clang** is the sanitizer gate and must
+be green on every milestone branch. Windows tests remain required under the
+following owner-approved policy:
+
+- An `itch_parse` timeout qualifies as the known MSVC toolchain exit stall only
+  when both trace markers printed in order and `main returning status=N` matches
+  the status expected by the test. Expected status is supplied by the caller,
+  never inferred from the marker.
+- A GoogleTest executable timeout qualifies only when its final
+  `[  PASSED  ] N tests.` summary printed before the hang.
+- Other native executables use the same entry/return convention with their
+  executable name; the expected status is the CTest success status, zero.
+- Any missing marker, wrong status, failing assertion, sanitizer report, or
+  unclassified failure blocks. A second stall of the same suite in the retry
+  also blocks. Debug failures and Linux failures do not receive this exception.
+- Log a qualifying stall in the PR with the suite, elapsed time, marker lines,
+  and ASan log path. Rerun that complete CTest suite **once**. A successful retry
+  does not erase the first attempt or make it an uninterrupted clean run.
+
+`scripts/test.ps1` calls `scripts/run_test_policy.py` to apply this policy.
+It reads CTest JUnit output (requires CMake 3.21+) and structured pytest failure
+records, then classifies each suite as `passed`, `known_stall`, or `failure`.
+Only qualifying suites are selected for one retry; an unrelated failure blocks
+all retries. Pytest is one CTest suite, so any qualifying child timeout causes
+one full pytest rerun. No child invocation retries itself.
+
+Each run saves immutable attempt logs, CTest XML, pytest evidence, `report.json`,
+and a PR-ready `review.md` under `.local/review/<preset>-<run>/`. ASan logs have
+attempt-specific prefixes under that directory and its counterpart beneath the
+build directory. Both resolved log paths and search patterns are recorded;
+when the runtime emits diagnostics only on stderr, the attempt log retains them.
+`<preset>-policy-latest.json` points to the latest report. `Policy result: PASS`
+means every suite passed initially or on its single authorized retry.
+
+New M3+ C++ executables run by CTest must wrap their entry point using
+`me::platform::traced_main` from `src/platform/main_trace.hpp`, with the executable
+name as the first argument. Put all work and owned resources inside its callable
+body, return the intended exit status, and allow exceptions to remain failures.
+The helper emits flushed entry/return markers when either `ITCH_PARSE_TRACE=1`
+or `ME_TRACE=1` is set. The return marker follows body-local cleanup. GoogleTest
+executables still qualify through their final passed summary. Do not bypass
+normal shutdown, suppress sanitizer reports, or raise a deadline to hide a stall.
 
 Alternatively, use an x64 Native Tools Command Prompt and run CMake directly,
 passing `-DPython3_EXECUTABLE=<absolute path to .venv/Scripts/python.exe>`.

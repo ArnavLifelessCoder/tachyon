@@ -93,13 +93,13 @@ deadline to the entire invocation. On timeout it preserves the captured output
 on the exception, reports the last announced input path (including its seed), and
 does not retry. A timeout before any input announcement lists the batch inputs.
 
-With `ITCH_PARSE_TRACE=1`, the executable flushes `itch_parse: main entered` to
+With `ITCH_PARSE_TRACE=1` or `ME_TRACE=1`, the executable flushes `itch_parse: main entered` to
 stderr just after checking the environment in `main`/`wmain`, and
 `itch_parse: main returning status=N` immediately before
 return, after local argument storage has been destroyed. Batch processing also
 flushes `itch_parse: input index=N` before each mapping. These diagnostic markers
 are separate from JSON stdout. Entry/return markers are disabled for every
-other value, including an unset variable. Batch input markers remain enabled
+other value when neither variable equals `1`. Batch input markers remain enabled
 to identify the active input on timeout. The launch probe and local test helper
 explicitly enable entry/return tracing and restore the previous environment.
 
@@ -141,8 +141,11 @@ binary-boundary, and malformed-input checks now share one batch per group.
 Their individual pytest cases and reference assertions are retained.
 
 Batching reduces the number of launches exposed to this MSVC ASan exit stall;
-it does not claim to repair the sanitizer runtime. A future timeout still fails
-the test immediately with captured markers and input context. To characterize
+it does not claim to repair the sanitizer runtime. A timeout still fails the
+child invocation immediately with captured markers and input context. From M3,
+the Windows test runner applies the [owner-approved retry policy](build.md#sanitizer-gate-and-windows-exit-stalls-m3-onward)
+to the complete CTest suite, preserving both attempts. The standalone launch
+probe still stops on the first failure without retrying. To characterize
 a recurrence, run from a Visual Studio developer shell:
 
 ```powershell
@@ -194,7 +197,8 @@ CTest runs these checks in both debug and ASan configurations. TSan begins with
 the threaded components in M4.
 
 On Windows, `./scripts/check_parser_suites.ps1` runs the complete debug and ASan
-suites three consecutive times each. It stops on the first failure, preserves
+suites three times each. Each run uses the documented Windows stall policy;
+it stops on the first blocking failure, preserves
 each verbose log under `.local/review/`, and records CTest and total invocation
 times in ignored `.local/review/windows-suite-runs.json` for inclusion in the
 pull request description. Each preset is configured and built

@@ -12,7 +12,7 @@ $head = (& git rev-parse HEAD).Trim()
 $stamp = (Get-Date).ToString('yyyyMMdd-HHmmss')
 foreach ($preset in @('debug', 'asan')) {
     for ($run = 1; $run -le $Runs; $run++) {
-        $logName = "m2-validation-$stamp-$preset-$run.txt"
+        $logName = "validation-$stamp-$preset-$run.txt"
         $log = Join-Path $reviewDirectory $logName
         $clock = [System.Diagnostics.Stopwatch]::StartNew()
         $failure = $null
@@ -23,11 +23,12 @@ foreach ($preset in @('debug', 'asan')) {
         }
         $clock.Stop()
         $text = Get-Content -LiteralPath $log -Raw
-        $match = [regex]::Match($text, 'Total Test time \(real\) =\s*([0-9.]+) sec')
-        $seconds = if ($match.Success) {
-            [double]::Parse($match.Groups[1].Value, [cultureinfo]::InvariantCulture)
-        } else { $null }
-        $passed = -not $failure -and $text -match '100% tests passed, 0 tests failed out of \d+'
+        $timeMatches = [regex]::Matches($text, 'Total Test time \(real\) =\s*([0-9.]+) sec')
+        $seconds = 0.0
+        foreach ($match in $timeMatches) {
+            $seconds += [double]::Parse($match.Groups[1].Value, [cultureinfo]::InvariantCulture)
+        }
+        $passed = -not $failure -and $text -match 'Policy result: PASS'
         $records += [ordered]@{
             preset = $preset
             run = $run

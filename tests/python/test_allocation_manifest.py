@@ -1,4 +1,5 @@
 import json
+import subprocess
 
 import pytest
 
@@ -19,3 +20,17 @@ def test_probe_uses_manifest_count(parser_executable, tmp_path, count):
     assert "allocations=0" in result.stdout
     manifest.write_text(json.dumps({"fixture_file": fixture.name, "messages": count + 1}))
     assert run_probe(executable, manifest).returncode == 1
+
+
+def test_probe_never_accepts_a_sanitizer_report(monkeypatch, tmp_path):
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text(json.dumps({"fixture_file": "fixture.itch", "messages": 0}))
+    monkeypatch.setattr(
+        subprocess,
+        "run",
+        lambda *args, **kwargs: subprocess.CompletedProcess(
+            [], 1, "", "ERROR: AddressSanitizer: heap-buffer-overflow"
+        ),
+    )
+    with pytest.raises(RuntimeError, match="AddressSanitizer"):
+        run_probe(tmp_path / "probe", manifest)

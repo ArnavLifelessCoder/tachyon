@@ -1,5 +1,4 @@
 import json
-import subprocess
 
 import pytest
 
@@ -18,13 +17,7 @@ def test_batch_preserves_order_and_continues_after_errors(parser_executable, tmp
     bad.write_bytes(b"\x00")
     empty.write_bytes(b"")
     inputs = [good, bad, missing, empty, good]
-    result = subprocess.run(
-        [str(parser_executable), "--batch", "--events"],
-        input="".join(f"{path}\n" for path in inputs),
-        encoding="utf-8",
-        capture_output=True,
-        timeout=20,
-    )
+    result = run_parser_batch(inputs, parser_executable, events=True)
     assert result.returncode == 0, result.stderr
     rows = [json.loads(line) for line in result.stdout.splitlines()]
     assert len(rows) == len(inputs)
@@ -39,9 +32,7 @@ def test_batch_preserves_order_and_continues_after_errors(parser_executable, tmp
 
 
 def test_batch_empty_list(parser_executable):
-    result = subprocess.run(
-        [str(parser_executable), "--batch"], input="", text=True, capture_output=True, timeout=20
-    )
+    result = run_parser_batch([], parser_executable)
     assert result.returncode == 0, result.stderr
     assert result.stdout == ""
 
@@ -58,6 +49,7 @@ def test_batch_counts_without_events(parser_executable, tmp_path):
 
 @pytest.mark.parametrize("trace", [None, "0", "1", "10"])
 def test_main_markers_require_trace_one(parser_executable, monkeypatch, trace):
+    monkeypatch.delenv("ME_TRACE", raising=False)
     if trace is None:
         monkeypatch.delenv("ITCH_PARSE_TRACE", raising=False)
     else:
@@ -67,3 +59,12 @@ def test_main_markers_require_trace_one(parser_executable, monkeypatch, trace):
     assert result.stdout == ""
     assert ("itch_parse: main entered" in result.stderr) == (trace == "1")
     assert ("itch_parse: main returning status=0" in result.stderr) == (trace == "1")
+
+
+def test_main_markers_accept_me_trace(parser_executable, monkeypatch):
+    monkeypatch.delenv("ITCH_PARSE_TRACE", raising=False)
+    monkeypatch.setenv("ME_TRACE", "1")
+    result = run_parser_batch([], parser_executable)
+    assert result.returncode == 0
+    assert "itch_parse: main entered" in result.stderr
+    assert "itch_parse: main returning status=0" in result.stderr

@@ -42,3 +42,13 @@ def test_batch_timeout_identifies_active_seed_without_retry(monkeypatch, tmp_pat
     assert len(calls) == 1
     assert "seed-17.itch" in "\n".join(info.value.__notes__)
     assert b"input index=17" in info.value.stderr
+
+
+def test_sanitizer_report_blocks_even_if_child_returns_expected_status(monkeypatch, tmp_path):
+    def report(command, **kwargs):
+        kwargs["stderr"].write(b"ERROR: AddressSanitizer: heap-buffer-overflow\n")
+        return subprocess.CompletedProcess(command, 1)
+
+    monkeypatch.setattr(subprocess, "run", report)
+    with pytest.raises(RuntimeError, match="AddressSanitizer"):
+        parse_file.run_parser(tmp_path / "missing", tmp_path / "parser", expected_status=1)

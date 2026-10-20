@@ -121,6 +121,13 @@ with the allocation probe and Python suite, there are five CTest entries.
 A regression checks the configured CTest commands to prevent a return to
 per-case launches or filters. Native suites have a 20-second timeout.
 
+With native launches grouped, a later field-differential batch reached input
+198 of 200 before its 20-second deadline, without a return marker. That sequence
+is retained in `results/m2/windows-suite-runs-before-json-buffer.json`. Diagnostic
+event formatting now appends to a string and uses `std::to_chars` for integers,
+avoiding a formatted stream operation for every field. The deadline and all
+200 seeds with 500 known messages each are unchanged.
+
 Batching reduces the number of launches exposed to this MSVC ASan exit stall;
 it does not claim to repair the sanitizer runtime. A future timeout still fails
 the test immediately with captured markers and input context. To characterize

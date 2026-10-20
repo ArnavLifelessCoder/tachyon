@@ -1,6 +1,7 @@
 #include "parser_cli.hpp"
 
 #include <array>
+#include <charconv>
 #include <concepts>
 #include <iostream>
 #include <sstream>
@@ -11,7 +12,31 @@
 
 namespace {
 constexpr char hex[] = "0123456789abcdef";
-void quote(std::ostream& out, std::string_view text) {
+class JsonBuffer {
+ public:
+  JsonBuffer& operator<<(char value) {
+    data_.push_back(value);
+    return *this;
+  }
+  JsonBuffer& operator<<(std::string_view value) {
+    data_.append(value);
+    return *this;
+  }
+  template <std::integral T>
+  JsonBuffer& operator<<(T value) {
+    static_assert(sizeof(T) <= sizeof(std::uint64_t));
+    char buffer[32];
+    const auto result = std::to_chars(buffer, buffer + sizeof(buffer), value);
+    data_.append(buffer, static_cast<std::size_t>(result.ptr - buffer));
+    return *this;
+  }
+  const std::string& str() const { return data_; }
+
+ private:
+  std::string data_;
+};
+template <class Output>
+void quote(Output& out, std::string_view text) {
   out << '"';
   for (unsigned char c : text) {
     if (c < 32 || c >= 127 || c == '"' || c == '\\') {
@@ -25,7 +50,7 @@ void quote(std::ostream& out, std::string_view text) {
 struct JsonHandler {
   bool enabled;
   bool first = true;
-  std::ostringstream out;
+  JsonBuffer out;
   void begin(char type) {
     if (!first) out << ',';
     first = false;

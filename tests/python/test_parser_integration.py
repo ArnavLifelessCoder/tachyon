@@ -12,6 +12,32 @@ from python.ref_parser import ParseError, parse
 from tests.fuzz_corpus import write_corpus
 
 FIXTURES = ROOT / "tests" / "fixtures"
+FIXTURE_NAMES = ["synthetic", "01302019.first100000", "01302019.AAPL-MSFT-SPY"]
+MALFORMED_CASES = [
+    b"\0",
+    b"\xff\xff?",
+    frame(b"S"),
+    frame(b"R" + bytes(39)),
+    b"\0\0x",
+    frame(b"?") + b"\0\x10S",
+]
+
+
+def batch_rows(sources, executable, *, events=True):
+    result = run_parser_batch(sources, executable, events=events)
+    assert result.returncode == 0, result.stdout + result.stderr
+    rows = [json.loads(line) for line in result.stdout.splitlines()]
+    assert len(rows) == len(sources), f"inputs={sources}"
+    return rows
+
+
+@pytest.fixture(scope="module")
+def fixture_counts(parser_executable):
+    rows = batch_rows(
+        [FIXTURES / f"{name}.itch" for name in FIXTURE_NAMES], parser_executable, events=False
+    )
+    assert all(row["status"] == 0 for row in rows), rows
+    return {name: row["result"] for name, row in zip(FIXTURE_NAMES, rows, strict=True)}
 
 
 def cpp(source, executable, *, events=False, context=""):
@@ -24,11 +50,11 @@ def cpp(source, executable, *, events=False, context=""):
         raise
 
 
-@pytest.mark.parametrize("name", ["synthetic", "01302019.first100000", "01302019.AAPL-MSFT-SPY"])
-def test_cpp_reference_and_manifest_counts(parser_executable, name):
+@pytest.mark.parametrize("name", FIXTURE_NAMES)
+def test_cpp_reference_and_manifest_counts(fixture_counts, name):
     source = FIXTURES / f"{name}.itch"
     manifest = json.loads((FIXTURES / f"{name}.manifest.json").read_text())
-    actual = cpp(source, parser_executable)
+    actual = fixture_counts[name]
     assert actual == parse(source.read_bytes())
     assert actual["counts"] == manifest["counts"]
     assert actual["messages"] == manifest["messages"]
@@ -103,39 +129,52 @@ def test_mutated_corpus_differential(parser_executable, tmp_path, request):
     )
 
 
-@pytest.mark.parametrize("kind", list(SCHEMAS))
-def test_binary_text_and_numeric_boundaries(parser_executable, tmp_path, kind):
+@pytest.fixture(scope="module")
+def boundary_results(parser_executable, tmp_path_factory):
     # Arbitrary payload bytes are structural inputs, not valid trading events.
     import struct
 
     from python.ref_parser import FORMATS
 
-    length = 11 + struct.calcsize(">" + FORMATS[kind][0])
-    data = frame(kind.encode() + b"\xff" * (length - 1))
-    source = tmp_path / "binary.itch"
-    source.write_bytes(data)
-    assert cpp(source, parser_executable, events=True) == parse(data, events=True)
+    directory = tmp_path_factory.mktemp("binary-boundaries")
+    sources = []
+    inputs = []
+    for kind in SCHEMAS:
+        length = 11 + struct.calcsize(">" + FORMATS[kind][0])
+        data = frame(kind.encode() + b"\xff" * (length - 1))
+        source = directory / f"{kind}.itch"
+        source.write_bytes(data)
+        sources.append(source)
+        inputs.append(data)
+    rows = batch_rows(sources, parser_executable)
+    return dict(zip(SCHEMAS, zip(inputs, rows, strict=True), strict=True))
 
 
-@pytest.mark.parametrize(
-    "data",
-    [
-        b"\0",
-        b"\xff\xff?",
-        frame(b"S"),
-        frame(b"R" + bytes(39)),
-        b"\0\0x",
-        frame(b"?") + b"\0\x10S",
-    ],
-)
-def test_error_code_and_offset_match_reference(parser_executable, tmp_path, data):
-    source = tmp_path / "bad.itch"
-    source.write_bytes(data)
+@pytest.mark.parametrize("kind", list(SCHEMAS))
+def test_binary_text_and_numeric_boundaries(boundary_results, kind):
+    data, row = boundary_results[kind]
+    assert row == {"status": 0, "result": parse(data, events=True)}
+
+
+@pytest.fixture(scope="module")
+def error_results(parser_executable, tmp_path_factory):
+    directory = tmp_path_factory.mktemp("malformed-frames")
+    sources = []
+    for index, data in enumerate(MALFORMED_CASES):
+        source = directory / f"invalid-{index}.itch"
+        source.write_bytes(data)
+        sources.append(source)
+    return dict(zip(MALFORMED_CASES, batch_rows(sources, parser_executable), strict=True))
+
+
+@pytest.mark.parametrize("data", MALFORMED_CASES)
+def test_error_code_and_offset_match_reference(error_results, data):
     with pytest.raises(ParseError) as info:
         parse(data)
-    result = run_parser(source, parser_executable, events=True)
-    assert result.returncode == 2
-    assert json.loads(result.stdout) == {"error": info.value.code, "offset": info.value.offset}
+    assert error_results[data] == {
+        "status": 2,
+        "result": {"error": info.value.code, "offset": info.value.offset},
+    }
 
 
 @pytest.mark.parametrize("compressed", [False, True])

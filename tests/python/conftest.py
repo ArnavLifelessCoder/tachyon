@@ -8,7 +8,7 @@ def pytest_addoption(parser):
     parser.addoption("--seed", type=int, default=20261020, help="differential-test base seed")
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def parser_executable(request):
     supplied = request.config.getoption("--parser")
     if supplied is None:

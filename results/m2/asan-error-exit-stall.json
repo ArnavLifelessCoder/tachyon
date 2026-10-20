@@ -1,0 +1,13 @@
+{
+  "preset": "asan",
+  "validation": "focused parser integration and batch tests",
+  "failed": 1,
+  "passed": 30,
+  "seconds": 38.93,
+  "timeout_seconds": 20,
+  "case": "test_error_code_and_offset_match_reference",
+  "input_hex": "000153",
+  "entered_main": true,
+  "returning_main_status": 2,
+  "log": ".local/review/json-buffer-asan.txt"
+}

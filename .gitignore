@@ -1,0 +1,14 @@
+/00-CONVENTIONS.md
+/01-matching-engine.md
+/build/
+/.venv/
+/.cache/
+/.local/
+/.tmp/
+/data/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+*.py[cod]
+*.part
+CMakeUserPresets.json

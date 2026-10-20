@@ -60,6 +60,16 @@ if(BUILD_TESTING)
   include(GoogleTest)
   gtest_discover_tests(me_tests DISCOVERY_MODE PRE_TEST PROPERTIES TIMEOUT 60)
   find_package(Python3 3.11 REQUIRED COMPONENTS Interpreter)
+  add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/parser_cases.inc"
+    COMMAND "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tests/generate_parser_cases.py"
+      "${CMAKE_CURRENT_BINARY_DIR}/parser_cases.inc"
+    DEPENDS tests/generate_parser_cases.py python/itch_writer.py
+    VERBATIM)
+  add_executable(parser_tests tests/parser_test.cpp "${CMAKE_CURRENT_BINARY_DIR}/parser_cases.inc")
+  target_include_directories(parser_tests PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
+  target_link_libraries(parser_tests PRIVATE me GTest::gtest)
+  me_strict_warnings(parser_tests)
+  gtest_discover_tests(parser_tests DISCOVERY_MODE PRE_TEST PROPERTIES TIMEOUT 60)
   add_test(NAME python_tests COMMAND "${Python3_EXECUTABLE}" -m pytest
     -v -ra "${PROJECT_SOURCE_DIR}/tests/python"
     --basetemp "${CMAKE_BINARY_DIR}/pytest-tmp"

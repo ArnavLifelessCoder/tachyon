@@ -1,0 +1,17 @@
+[
+  {"type": "S", "timestamp": 1, "event_code": "O"},
+  {"type": "R", "stock_locate": 1, "timestamp": 2, "stock": "TEST"},
+  {"type": "R", "stock_locate": 2, "timestamp": 3, "stock": "OTHER"},
+  {"type": "A", "stock_locate": 1, "timestamp": 4, "order_id": 1, "side": "B", "shares": 100, "stock": "TEST", "price": 1000000},
+  {"type": "F", "stock_locate": 1, "timestamp": 5, "order_id": 2, "side": "S", "shares": 100, "stock": "TEST", "price": 1010000, "attribution": "TEST"},
+  {"type": "A", "stock_locate": 2, "timestamp": 6, "order_id": 3, "side": "B", "shares": 200, "stock": "OTHER", "price": 990000},
+  {"type": "E", "stock_locate": 1, "timestamp": 7, "order_id": 1, "shares": 10, "match_number": 1},
+  {"type": "C", "stock_locate": 1, "timestamp": 8, "order_id": 2, "shares": 20, "match_number": 2, "printable": "Y", "price": 1005000},
+  {"type": "X", "stock_locate": 1, "timestamp": 9, "order_id": 1, "shares": 5},
+  {"type": "U", "stock_locate": 2, "timestamp": 10, "order_id": 3, "new_order_id": 4, "shares": 100, "price": 980000},
+  {"type": "D", "stock_locate": 1, "timestamp": 11, "order_id": 1},
+  {"type": "P", "stock_locate": 1, "timestamp": 12, "order_id": 0, "side": "B", "shares": 30, "stock": "TEST", "price": 1005000, "match_number": 3},
+  {"type": "E", "stock_locate": 1, "timestamp": 13, "order_id": 2, "shares": 80, "match_number": 4},
+  {"type": "D", "stock_locate": 2, "timestamp": 14, "order_id": 4},
+  {"type": "S", "timestamp": 15, "event_code": "C"}
+]

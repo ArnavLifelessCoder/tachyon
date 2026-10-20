@@ -58,7 +58,7 @@ if(BUILD_TESTING)
   target_link_libraries(me_tests PRIVATE me GTest::gtest_main)
   me_strict_warnings(me_tests)
   include(GoogleTest)
-  gtest_discover_tests(me_tests DISCOVERY_TIMEOUT 60 PROPERTIES TIMEOUT 60)
+  gtest_discover_tests(me_tests DISCOVERY_MODE PRE_TEST PROPERTIES TIMEOUT 60)
   find_package(Python3 3.11 REQUIRED COMPONENTS Interpreter)
   add_test(NAME python_tests COMMAND "${Python3_EXECUTABLE}" -m pytest
     -v -ra "${PROJECT_SOURCE_DIR}/tests/python"

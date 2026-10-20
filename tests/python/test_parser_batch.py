@@ -1,12 +1,15 @@
 import json
 import subprocess
 
+import pytest
+
 from python.itch_writer import encode_event
 from python.parse_file import run_parser_batch
 from python.ref_parser import parse
 
 
-def test_batch_preserves_order_and_continues_after_errors(parser_executable, tmp_path):
+def test_batch_preserves_order_and_continues_after_errors(parser_executable, tmp_path, monkeypatch):
+    monkeypatch.setenv("ITCH_PARSE_TRACE", "1")
     good = tmp_path / "行情 seed-17.itch"
     bad = tmp_path / "seed-18.itch"
     empty = tmp_path / "seed-19.itch"
@@ -51,3 +54,16 @@ def test_batch_counts_without_events(parser_executable, tmp_path):
     assert [json.loads(line) for line in result.stdout.splitlines()] == [
         {"status": 0, "result": parse(source.read_bytes())}
     ] * 2
+
+
+@pytest.mark.parametrize("trace", [None, "0", "1", "10"])
+def test_main_markers_require_trace_one(parser_executable, monkeypatch, trace):
+    if trace is None:
+        monkeypatch.delenv("ITCH_PARSE_TRACE", raising=False)
+    else:
+        monkeypatch.setenv("ITCH_PARSE_TRACE", trace)
+    result = run_parser_batch([], parser_executable)
+    assert result.returncode == 0, result.stderr
+    assert result.stdout == ""
+    assert ("itch_parse: main entered" in result.stderr) == (trace == "1")
+    assert ("itch_parse: main returning status=0" in result.stderr) == (trace == "1")

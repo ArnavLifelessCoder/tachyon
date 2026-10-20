@@ -3,6 +3,7 @@
 import argparse
 import hashlib
 import json
+import os
 import platform
 import subprocess
 import sys
@@ -16,6 +17,18 @@ from python.parse_file import run_parser  # noqa: E402
 
 
 def probe(source, executable, launches):
+    previous = os.environ.get("ITCH_PARSE_TRACE")
+    os.environ["ITCH_PARSE_TRACE"] = "1"
+    try:
+        return _probe(source, executable, launches)
+    finally:
+        if previous is None:
+            os.environ.pop("ITCH_PARSE_TRACE", None)
+        else:
+            os.environ["ITCH_PARSE_TRACE"] = previous
+
+
+def _probe(source, executable, launches):
     records = []
     for index in range(launches):
         started = time.perf_counter()

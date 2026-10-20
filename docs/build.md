@@ -25,8 +25,23 @@ The helper loads the installed VS 2022 x64 developer environment if needed,
 configures CMake with the local Python environment, builds with Ninja, and runs
 CTest verbosely. Complete test output is saved under ignored `.local/review/`;
 review evidence belongs in the pull request description, not in `results/`.
-GoogleTest discovery runs at test time with `DISCOVERY_MODE PRE_TEST` and the
-default discovery timeout.
+CTest launches each complete GoogleTest executable once, without discovery or
+per-case child processes. The parser suite has a 60-second CTest timeout; the
+other native suites retain their 20-second timeout.
+
+To run one case directly after building (replace the executable path as needed
+on Linux):
+
+```powershell
+./build/debug/parser_tests.exe --gtest_filter=Parser.MutatedCorpusExactAllocationAndUnalignedInput --seed=1234
+./build/asan/parser_tests.exe --gtest_filter=Parser.MutatedCorpusExactAllocationAndUnalignedInput --seed=1234
+```
+
+Use `--gtest_list_tests` on the executable to list available case names.
+`ctest -R parser_tests` selects the complete suite, not one GoogleTest case.
+The local test helper enables `ITCH_PARSE_TRACE=1` for parser entry/return
+diagnostics and restores the previous setting afterward. For a direct parser
+invocation, set that environment variable explicitly when tracing is needed.
 
 Local ASan runs enable `ASAN_OPTIONS=verbosity=1` and write per-process diagnostic
 logs under `.local/review/` and `build/asan/.local/review/`, with timestamped

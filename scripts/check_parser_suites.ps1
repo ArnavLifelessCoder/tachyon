@@ -6,8 +6,7 @@ $ErrorActionPreference = 'Stop'
 $taskRoot = Split-Path $PSScriptRoot -Parent
 Set-Location -LiteralPath $taskRoot
 $reviewDirectory = Join-Path $taskRoot '.local/review'
-$resultsDirectory = Join-Path $taskRoot 'results/m2'
-New-Item -ItemType Directory -Force $reviewDirectory, $resultsDirectory | Out-Null
+New-Item -ItemType Directory -Force $reviewDirectory | Out-Null
 $records = @()
 $head = (& git rev-parse HEAD).Trim()
 $stamp = (Get-Date).ToString('yyyyMMdd-HHmmss')
@@ -45,7 +44,7 @@ foreach ($preset in @('debug', 'asan')) {
             stop_on_first_failure = $true
             runs = $records
         } | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (
-            Join-Path $resultsDirectory 'windows-suite-runs.json'
+            Join-Path $reviewDirectory 'windows-suite-runs.json'
         ) -Encoding utf8
         Write-Output "$preset run $run : passed=$passed ctest_seconds=$seconds"
         if (-not $passed) { throw "Acceptance stopped; inspect $log" }

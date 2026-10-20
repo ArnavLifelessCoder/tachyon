@@ -30,7 +30,9 @@ if (-not $SkipBuild) {
     if ($LASTEXITCODE) { throw "Build failed: $LASTEXITCODE" }
 }
 $previousAsanOptions = $env:ASAN_OPTIONS
+$previousParserTrace = $env:ITCH_PARSE_TRACE
 try {
+    $env:ITCH_PARSE_TRACE = '1'
     if ($Preset -eq 'asan') {
         # CTest executables run in the build tree; pytest children run at the root.
         # A relative prefix avoids drive-letter parsing in ASAN_OPTIONS.
@@ -49,4 +51,5 @@ try {
     if ($LASTEXITCODE) { throw "Tests failed: $LASTEXITCODE" }
 } finally {
     $env:ASAN_OPTIONS = $previousAsanOptions
+    $env:ITCH_PARSE_TRACE = $previousParserTrace
 }

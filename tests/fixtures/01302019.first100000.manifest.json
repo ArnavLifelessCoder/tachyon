@@ -1,0 +1,22 @@
+{
+  "source_file": "01302019.NASDAQ_ITCH50.gz",
+  "source_url": "https://emi.nasdaq.com/ITCH/Nasdaq%20ITCH/01302019.NASDAQ_ITCH50.gz",
+  "fixture_file": "01302019.first100000.itch",
+  "messages": 100000,
+  "bytes": 2852306,
+  "sha256": "00eba6a1a5bf4cc82a573472530ecc39858c18f8b8dae9b1e47f7dce2a500f97",
+  "counts": {
+    "H": 8707,
+    "L": 73872,
+    "R": 8713,
+    "S": 1,
+    "Y": 8707
+  },
+  "synthetic": false,
+  "selection": "first 100000 complete messages",
+  "command": "python scripts/make_fixture.py data/01302019.NASDAQ_ITCH50.gz tests/fixtures/01302019.first100000.itch --messages 100000",
+  "source_bytes": 4764426091,
+  "source_sha256": "8c97b5b13bc451c012c2466fb7e258da134dab29aa47b67fe7b0088c78e870be",
+  "source_uncompressed_bytes": 11245883092,
+  "source_gzip_integrity_verified": true
+}

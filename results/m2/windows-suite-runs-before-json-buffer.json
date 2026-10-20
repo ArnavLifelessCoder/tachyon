@@ -1,0 +1,53 @@
+{
+  "tested_commit": "39602652f82f184af27f454724a3e1b10185dcee",
+  "platform": "Microsoft Windows 10.0.26300",
+  "requested_runs_per_preset": 3,
+  "stop_on_first_failure": true,
+  "runs": [
+    {
+      "preset": "debug",
+      "run": 1,
+      "passed": true,
+      "ctest_seconds": 74.49,
+      "configure_build_test_seconds": 130.1391317,
+      "failure": null,
+      "log": ".local/review/m2-validation-20261020-210326-debug-1.txt"
+    },
+    {
+      "preset": "debug",
+      "run": 2,
+      "passed": true,
+      "ctest_seconds": 81.16,
+      "configure_build_test_seconds": 81.8709384,
+      "failure": null,
+      "log": ".local/review/m2-validation-20261020-210326-debug-2.txt"
+    },
+    {
+      "preset": "debug",
+      "run": 3,
+      "passed": true,
+      "ctest_seconds": 72.09,
+      "configure_build_test_seconds": 72.7645492,
+      "failure": null,
+      "log": ".local/review/m2-validation-20261020-210326-debug-3.txt"
+    },
+    {
+      "preset": "asan",
+      "run": 1,
+      "passed": true,
+      "ctest_seconds": 51.55,
+      "configure_build_test_seconds": 98.9302124,
+      "failure": null,
+      "log": ".local/review/m2-validation-20261020-210326-asan-1.txt"
+    },
+    {
+      "preset": "asan",
+      "run": 2,
+      "passed": false,
+      "ctest_seconds": 58.63,
+      "configure_build_test_seconds": 58.8832642,
+      "failure": "Tests failed: 8",
+      "log": ".local/review/m2-validation-20261020-210326-asan-2.txt"
+    }
+  ]
+}

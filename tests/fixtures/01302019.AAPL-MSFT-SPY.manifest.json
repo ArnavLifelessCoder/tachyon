@@ -1,0 +1,44 @@
+{
+  "source_file": "01302019.NASDAQ_ITCH50.gz",
+  "source_url": "https://emi.nasdaq.com/ITCH/Nasdaq%20ITCH/01302019.NASDAQ_ITCH50.gz",
+  "source_bytes": 4764426091,
+  "source_sha256": "8c97b5b13bc451c012c2466fb7e258da134dab29aa47b67fe7b0088c78e870be",
+  "source_uncompressed_bytes": 11245883092,
+  "source_gzip_integrity_verified": true,
+  "messages": 149213,
+  "bytes": 4999981,
+  "counts": {
+    "A": 85572,
+    "C": 47,
+    "D": 37759,
+    "E": 5611,
+    "F": 1719,
+    "H": 3,
+    "I": 361,
+    "L": 141,
+    "P": 2221,
+    "Q": 3,
+    "R": 8714,
+    "S": 3,
+    "U": 3107,
+    "X": 3949,
+    "Y": 3
+  },
+  "locates": [
+    14,
+    5217,
+    7291
+  ],
+  "symbols": {
+    "14": "AAPL",
+    "5217": "MSFT",
+    "7291": "SPY"
+  },
+  "source_messages_consumed": 12632660,
+  "stop_reason": "size_limit",
+  "fixture_file": "01302019.AAPL-MSFT-SPY.itch",
+  "synthetic": false,
+  "selection": "all S/R and every selected-locate message from day start; stop before the first retained frame reaching 5000000 bytes",
+  "command": "python scripts/make_fixture.py data/01302019.NASDAQ_ITCH50.gz tests/fixtures/01302019.AAPL-MSFT-SPY.itch --locates 14 5217 7291",
+  "sha256": "ac0965959ae693fdfdc5aa0ebc0e48598f6ec85c2090ff8726c769fc605df556"
+}

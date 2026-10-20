@@ -1,6 +1,7 @@
 import hashlib
 import io
 from datetime import date
+from pathlib import Path
 from urllib.error import HTTPError
 
 import pytest
@@ -121,4 +122,33 @@ def test_output_created_during_download_is_preserved(tmp_path, monkeypatch):
     with pytest.raises(FileExistsError):
         download_itch.download(DAY, destination)
     assert destination.read_bytes() == b"keep"
+    assert destination.with_name("day.gz.part").read_bytes() == BODY
+
+
+def test_hardlink_failure_falls_back_without_losing_data(tmp_path, monkeypatch):
+    mock_response(monkeypatch, Response())
+
+    def fail_link(*args):
+        raise OSError("hard links unavailable")
+
+    monkeypatch.setattr(Path, "hardlink_to", fail_link)
+    destination = tmp_path / "day.gz"
+    result = download_itch.download(DAY, destination)
+    assert destination.read_bytes() == BODY
+    assert result["bytes"] == len(BODY)
     assert not destination.with_name("day.gz.part").exists()
+
+
+def test_failed_publication_retains_completed_download(tmp_path, monkeypatch):
+    mock_response(monkeypatch, Response())
+
+    def fail(*args):
+        raise OSError("publication unavailable")
+
+    monkeypatch.setattr(Path, "hardlink_to", fail)
+    monkeypatch.setattr("os.replace", fail)
+    destination = tmp_path / "day.gz"
+    with pytest.raises(OSError):
+        download_itch.download(DAY, destination)
+    assert not destination.exists()
+    assert destination.with_name("day.gz.part").read_bytes() == BODY

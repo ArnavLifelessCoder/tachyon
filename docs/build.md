@@ -3,7 +3,7 @@
 Requirements: CMake 3.20+, Ninja, Python 3.11+, and either Visual Studio 2022 C++
 Build Tools on Windows or GCC 12+/Clang 15+ on Linux. Initial CMake configuration
 needs network access to fetch GoogleTest. Google Benchmark is fetched only when
-`ME_BUILD_BENCHMARKS=ON`; M1 has no benchmark targets.
+`ME_BUILD_BENCHMARKS=ON`; there are no benchmark targets yet.
 
 ## Windows
 
@@ -23,7 +23,16 @@ uv pip install --python .venv/Scripts/python.exe -r requirements-dev.txt
 
 The helper loads the installed VS 2022 x64 developer environment if needed,
 configures CMake with the local Python environment, builds with Ninja, and runs
-CTest verbosely. Complete test output is saved under `results/m1/`.
+CTest verbosely. Complete test output is saved under ignored `.local/review/`;
+review evidence belongs in the pull request description, not in `results/`.
+GoogleTest discovery runs at test time with `DISCOVERY_MODE PRE_TEST` and the
+default discovery timeout.
+
+Local ASan runs enable `ASAN_OPTIONS=verbosity=1` and write per-process diagnostic
+logs under `.local/review/` and `build/asan/.local/review/`, with timestamped
+prefixes. Existing options are restored after the run. If a process-exit timeout
+recurs, retain and inspect these logs before considering another run; do not
+hide it with an increased timeout or a sanitizer suppression.
 
 Alternatively, use an x64 Native Tools Command Prompt and run CMake directly,
 passing `-DPython3_EXECUTABLE=<absolute path to .venv/Scripts/python.exe>`.
@@ -55,17 +64,24 @@ directory when changing compiler.
 | `tsan` | Explicitly unsupported | TSan, `-O1 -g`, frame pointers |
 
 Release is reserved for benchmarks. Project C++ targets use `/W4 /WX` on MSVC
-and `-Wall -Wextra -Wpedantic -Werror` elsewhere. `me` is an empty interface
-library in M1; its first smoke test checks C++20 compilation.
+and `-Wall -Wextra -Wpedantic -Werror` elsewhere. `me` contains the header-only
+span parser. `me_platform` supplies native file mappings; `itch_parse` is the
+diagnostic executable used by the differential integration tests.
 
 CTest runs both GoogleTest and pytest. Python tooling is pinned in
-`requirements-dev.txt`. Before committing, run:
+`requirements-dev.txt`, including clang-format 19.1.5 for both local use and CI.
+Activate `.venv` or use its executable paths before running these checks:
 
 ```sh
 ruff check .
 ruff format --check .
-clang-format --dry-run --Werror include/me/me.hpp tests/smoke_test.cpp
+git ls-files '*.cpp' '*.hpp' | xargs clang-format --dry-run --Werror
 ```
+
+The last command uses a POSIX shell. In PowerShell, pass the paths returned by
+`git ls-files '*.cpp' '*.hpp'` as arguments to `clang-format`.
+CTest supplies pytest with the executable from its own build preset through
+`--parser`; direct pytest runs can supply that option explicitly.
 
 CI tests debug and ASan on Windows/MSVC and Linux/GCC and Clang, and checks
 formatting and Python lint. The Ubuntu TSan job is declared but disabled until

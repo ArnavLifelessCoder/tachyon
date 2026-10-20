@@ -85,6 +85,11 @@ if(BUILD_TESTING)
   target_link_libraries(mapping_tests PRIVATE me_platform GTest::gtest_main)
   me_strict_warnings(mapping_tests)
   gtest_discover_tests(mapping_tests DISCOVERY_MODE PRE_TEST PROPERTIES TIMEOUT 60)
+  add_executable(parser_allocation_test tests/parser_allocation_test.cpp)
+  target_link_libraries(parser_allocation_test PRIVATE me me_platform)
+  me_strict_warnings(parser_allocation_test)
+  add_test(NAME parser_allocations COMMAND parser_allocation_test
+    "${PROJECT_SOURCE_DIR}/tests/fixtures/01302019.AAPL-MSFT-SPY.itch")
   add_test(NAME python_tests COMMAND "${Python3_EXECUTABLE}" -m pytest
     -v -ra "${PROJECT_SOURCE_DIR}/tests/python"
     --parser "$<TARGET_FILE:itch_parse>"

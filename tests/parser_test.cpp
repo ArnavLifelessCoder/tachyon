@@ -11,6 +11,7 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <type_traits>
 #include <vector>
 
 #include "me/itch_parser.hpp"
@@ -20,6 +21,7 @@ std::uint64_t seed = 0x123456789abcdef0ULL;
 
 template <class T>
 struct Capture {
+  static_assert(std::is_trivial_v<T> && std::is_standard_layout_v<T>);
   std::optional<T> value;
   void on(const T& message) {
     EXPECT_FALSE(value.has_value());

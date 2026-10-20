@@ -7,7 +7,7 @@ import subprocess
 import pytest
 
 from python.itch_writer import HEADER, SCHEMAS, encode_event, frame
-from python.parse_file import ROOT, run_parser
+from python.parse_file import ROOT, run_parser, run_parser_batch
 from python.ref_parser import ParseError, parse
 from tests.fuzz_corpus import write_corpus
 
@@ -38,8 +38,9 @@ def test_cpp_reference_and_manifest_counts(parser_executable, name):
 
 def test_seeded_field_differential(parser_executable, tmp_path, request):
     base = request.config.getoption("--seed")
-    source = tmp_path / "random.itch"
+    sources = []
     for seed in range(base, base + 200):
+        source = tmp_path / f"seed-{seed}.itch"
         rng = random.Random(seed)
         frames = []
         for _ in range(500):
@@ -56,17 +57,27 @@ def test_seeded_field_differential(parser_executable, tmp_path, request):
                 frames.append(frame(b"\xff" + rng.randbytes(rng.randrange(40))))
         data = b"".join(frames) + (b"\0\0" if seed % 2 else b"")
         source.write_bytes(data)
-        assert cpp(source, parser_executable, events=True, context=f"seed={seed}") == parse(
-            data, events=True
-        ), f"seed={seed}"
+        sources.append(source)
+    result = run_parser_batch(sources, parser_executable, events=True)
+    assert result.returncode == 0, result.stdout + result.stderr
+    rows = [json.loads(line) for line in result.stdout.splitlines()]
+    assert len(rows) == len(sources), f"seed={base} inputs={tmp_path}"
+    for source, row in zip(sources, rows, strict=True):
+        assert row == {"status": 0, "result": parse(source.read_bytes(), events=True)}, str(source)
 
 
 def test_mutated_corpus_differential(parser_executable, tmp_path, request):
     directory = tmp_path / "mutated-corpus"
     base = request.config.getoption("--seed")
     entries = write_corpus(FIXTURES, directory, seed=base, count=200)
+    result = run_parser_batch(
+        [directory / entry["file"] for entry in entries], parser_executable, events=True
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    rows = [json.loads(line) for line in result.stdout.splitlines()]
+    assert len(rows) == len(entries), f"seed={base} inputs={directory}"
     successes, errors = 0, 0
-    for entry in entries:
+    for entry, row in zip(entries, rows, strict=True):
         source = directory / entry["file"]
         context = f"seed={entry['seed']} mutation={entry['mutation']} input={source}"
         try:
@@ -78,9 +89,7 @@ def test_mutated_corpus_differential(parser_executable, tmp_path, request):
                 expected = {"error": error.code, "offset": error.offset}
                 expected_status = 2
                 errors += 1
-            result = run_parser(source, parser_executable, events=True)
-            assert result.returncode == expected_status, result.stdout + result.stderr
-            assert json.loads(result.stdout) == expected
+            assert row == {"status": expected_status, "result": expected}
         except Exception as error:
             error.add_note(context)
             raise

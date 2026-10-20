@@ -170,32 +170,64 @@ void counts(std::ostream& out, const std::array<std::uint64_t, 256>& values) {
   }
   out << '}';
 }
+int parse_file(const std::filesystem::path& path, bool events, std::ostream& out) {
+  try {
+    me::platform::MappedFile file(path);
+    JsonHandler handler{events, true, {}};
+    me::itch::Stats stats;
+    me::itch::parse(file.bytes(), handler, &stats);
+    out << "{\"messages\":" << stats.messages << ",\"counts\":";
+    counts(out, stats.counts);
+    out << ",\"skipped\":";
+    counts(out, stats.skipped);
+    out << ",\"bytes\":" << stats.bytes
+        << ",\"terminated\":" << (stats.terminated ? "true" : "false");
+    if (handler.enabled) out << ",\"events\":[" << handler.out.str() << ']';
+    out << '}';
+    return 0;
+  } catch (const me::itch::ParseError& error) {
+    out << "{\"error\":\"" << error.what() << "\",\"offset\":" << error.offset << '}';
+    return 2;
+  }
+}
 }  // namespace
 
 int parser_cli(std::span<const std::filesystem::path> args) {
   if (args.empty() || args.size() > 2 ||
       (args.size() == 2 && args[1] != std::filesystem::path("--events"))) {
-    std::cerr << "usage: itch_parse INPUT [--events]\n";
+    std::cerr << "usage: itch_parse INPUT [--events] | --batch [--events]\n";
     return 1;
   }
   try {
-    me::platform::MappedFile file(args[0]);
-    JsonHandler handler{args.size() == 2, true, {}};
-    me::itch::Stats stats;
-    me::itch::parse(file.bytes(), handler, &stats);
-    std::cout << "{\"messages\":" << stats.messages << ",\"counts\":";
-    counts(std::cout, stats.counts);
-    std::cout << ",\"skipped\":";
-    counts(std::cout, stats.skipped);
-    std::cout << ",\"bytes\":" << stats.bytes
-              << ",\"terminated\":" << (stats.terminated ? "true" : "false");
-    if (handler.enabled) std::cout << ",\"events\":[" << handler.out.str() << ']';
-    std::cout << "}\n" << std::flush;
-    return std::cout ? 0 : 1;
-  } catch (const me::itch::ParseError& error) {
-    std::cout << "{\"error\":\"" << error.what() << "\",\"offset\":" << error.offset << "}\n"
-              << std::flush;
-    return std::cout ? 2 : 1;
+    const bool events = args.size() == 2;
+    if (args[0] != std::filesystem::path("--batch")) {
+      const int status = parse_file(args[0], events, std::cout);
+      std::cout << '\n' << std::flush;
+      return std::cout ? status : 1;
+    }
+    std::string line;
+    std::size_t index = 0;
+    while (std::getline(std::cin, line)) {
+      if (!line.empty() && line.back() == '\r') line.pop_back();
+      std::cerr << "itch_parse: input index=" << index++ << '\n' << std::flush;
+      std::ostringstream result;
+      int status = 1;
+      try {
+        // The batch protocol uses one UTF-8 path per line on every platform.
+        const std::u8string utf8(line.begin(), line.end());
+        status = parse_file(std::filesystem::path(utf8), events, result);
+      } catch (const std::exception& error) {
+        result.str("");
+        result.clear();
+        result << "{\"error\":\"io_error\",\"message\":";
+        quote(result, error.what());
+        result << '}';
+      }
+      std::cout << "{\"status\":" << status << ",\"result\":" << result.str() << "}\n"
+                << std::flush;
+      if (!std::cout) return 1;
+    }
+    return std::cin.bad() ? 1 : 0;
   } catch (const std::exception& error) {
     std::cerr << error.what() << '\n';
     return 1;

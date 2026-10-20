@@ -2,6 +2,7 @@
 
 import argparse
 import gzip
+import re
 import shutil
 import subprocess
 import tempfile
@@ -10,23 +11,67 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def _invoke(command, sources, *, input_bytes=None):
+    scratch = ROOT / ".tmp"
+    scratch.mkdir(exist_ok=True)
+    # Files let timeout diagnostics be read without waiting for pipe EOF.
+    with (
+        tempfile.TemporaryFile(dir=scratch) as output,
+        tempfile.TemporaryFile(dir=scratch) as diagnostics,
+    ):
+        try:
+            result = subprocess.run(
+                command, input=input_bytes, stdout=output, stderr=diagnostics, timeout=20
+            )
+        except subprocess.TimeoutExpired as error:
+            output.seek(0)
+            diagnostics.seek(0)
+            error.output = output.read()
+            error.stderr = diagnostics.read()
+            stderr = error.stderr.decode("utf-8", errors="replace")
+            indices = re.findall(r"itch_parse: input index=(\d+)", stderr)
+            if indices and int(indices[-1]) < len(sources):
+                error.add_note(f"active input={sources[int(indices[-1])]}")
+            else:
+                error.add_note("inputs=" + ", ".join(str(source) for source in sources))
+            error.add_note("stderr:\n" + stderr)
+            raise
+        output.seek(0)
+        diagnostics.seek(0)
+        return subprocess.CompletedProcess(
+            command,
+            result.returncode,
+            output.read().decode("utf-8", errors="replace"),
+            diagnostics.read().decode("utf-8", errors="replace"),
+        )
+
+
+def run_parser_batch(sources, executable: Path, *, events=False):
+    """Parse raw files in one process; return one JSON line per input in order."""
+    paths = [Path(source).resolve() for source in sources]
+    if any("\n" in str(path) or "\r" in str(path) for path in paths):
+        raise ValueError("batch paths must not contain line breaks")
+    command = [str(executable.resolve()), "--batch"]
+    if events:
+        command.append("--events")
+    return _invoke(
+        command, paths, input_bytes="".join(f"{path}\n" for path in paths).encode("utf-8")
+    )
+
+
 def run_parser(source: Path, executable: Path, *, events=False):
     """Return captured parser output; always remove this invocation's scratch."""
     command = [str(executable.resolve())]
     options = ["--events"] if events else []
     if source.suffix.lower() != ".gz":
-        return subprocess.run(
-            [*command, str(source.resolve()), *options], capture_output=True, text=True, timeout=120
-        )
+        return _invoke([*command, str(source.resolve()), *options], [source])
     scratch = ROOT / ".tmp"
     scratch.mkdir(exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="itch-", dir=scratch) as directory:
         raw = Path(directory) / "input.itch"
         with gzip.open(source, "rb") as compressed, raw.open("xb") as output:
             shutil.copyfileobj(compressed, output, length=1024 * 1024)
-        return subprocess.run(
-            [*command, str(raw), *options], capture_output=True, text=True, timeout=120
-        )
+        return _invoke([*command, str(raw), *options], [source])
 
 
 def main():

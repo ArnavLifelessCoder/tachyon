@@ -79,25 +79,36 @@ raw file for longer runs.
 Build-time cases use `itch_writer.py` to create bytes for every known message
 type. C++ assertions check every field at zero, patterned values, and unsigned
 maximums. Every cut inside those messages is tested with an allocation ending
-at the cut and an unaligned starting address. Randomized GoogleTests exercise
-arbitrary bytes; unknown-type tests include the maximum frame length.
+at the cut and an unaligned starting address. The randomized GoogleTest mutates
+valid seed streams from the synthetic fixture and random frame-aligned slices
+of the real book fixture. Trials flip bytes, rewrite lengths (minus/plus one,
+zero, 65535, or random), replace type bytes, truncate, insert, or delete bytes.
+Mutation locations include the first frame. Each input is copied into an
+exact-size unaligned allocation before parsing. Coverage assertions require
+every known type to be decoded and more than 75% of trials to decode at least
+one frame. Unknown-type tests also include the maximum frame length.
 
 `python/ref_parser.py` uses its own `struct.unpack` formats and imports no writer
-or C++ layouts. Pytest compares complete decoded events on seeded random streams,
+or C++ layouts. Pytest compares complete decoded events on 200 seeded random streams,
 compares malformed-input codes and offsets, and requires exact counts from C++,
 the reference parser, and each fixture manifest. The AAPL/MSFT/SPY book fixture
 is mandatory and covers all eight book types. Its cut ends shortly after the
 open; it is not representative of regular-session book shape. Full-day
-crossed-book analysis belongs to M3.
+crossed-book analysis belongs to M3. A second differential test writes 200 mutated
+fixture streams and a seed/hash manifest into its pytest temporary directory.
+It compares full event output for accepted inputs and `{error, offset}` for
+rejected inputs. Failed assertions include the case seed and saved input path.
 
 A separate allocation probe replaces ordinary `new`/`new[]` and runs the real
-book fixture through a counting handler. Mapping and diagnostics happen outside
-the measured region. No parsing performance claims are made.
+book fixture through a counting handler. Its Python runner reads the fixture
+filename and expected message count from the manifest before starting the native
+probe. Mapping and diagnostics happen outside the measured region.
+No parsing performance claims are made.
 
 To repeat a seed (use the corresponding executable path on Linux):
 
 ```powershell
-./build/debug/parser_tests.exe --gtest_filter=Parser.RandomBytesExactAllocationAndUnalignedInput --seed=1234
+./build/debug/parser_tests.exe --gtest_filter=Parser.MutatedCorpusExactAllocationAndUnalignedInput --seed=1234
 ./.venv/Scripts/python.exe -m pytest tests/python/test_parser_integration.py --parser build/debug/itch_parse.exe --seed=1234 --basetemp .tmp/repro
 ```
 

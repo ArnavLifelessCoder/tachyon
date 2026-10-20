@@ -28,6 +28,19 @@ def test_qualified_child_timeout():
     assert classify(suite(), allow_known=False) == "failure"
 
 
+def test_pytest_case_names_are_not_runtime_diagnostics():
+    progress = (
+        "tests/python/test_stall_policy.py::test_bad[ERROR: AddressSanitizer: bad-free] "
+        "PASSED [ 92%]\n"
+        "tests/python/test_stall_policy.py::test_bad[[  FAILED  ] case] PASSED [ 93%]\n"
+    )
+    assert classify(suite(output=progress), allow_known=True) == "known_stall"
+    assert (
+        classify(suite(output=progress + "\nERROR: AddressSanitizer: bad-free"), allow_known=True)
+        == "failure"
+    )
+
+
 @pytest.mark.parametrize(
     "stderr,expected",
     [

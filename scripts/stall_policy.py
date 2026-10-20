@@ -43,6 +43,14 @@ def completed_main(record):
 
 def classify(suite, *, allow_known):
     output = suite.get("output", "")
+    if suite["name"] == "python_tests":
+        # Parametrized case IDs contain test data, including synthetic diagnostic text.
+        # Failure records below still decide whether an assertion or timeout occurred.
+        output = "\n".join(
+            line
+            for line in output.splitlines()
+            if not re.fullmatch(r"\S+::.* PASSED(?:\s+\[\s*\d+%\])?\s*", line)
+        )
     if suite.get("asan_reports") or SANITIZER.search(output) or ASSERTION.search(output):
         return "failure"
     if suite["status"] == "passed":

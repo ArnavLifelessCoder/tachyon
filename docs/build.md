@@ -28,6 +28,12 @@ review evidence belongs in the pull request description, not in `results/`.
 GoogleTest discovery runs at test time with `DISCOVERY_MODE PRE_TEST` and the
 default discovery timeout.
 
+Local ASan runs enable `ASAN_OPTIONS=verbosity=1` and write per-process diagnostic
+logs under `.local/review/` and `build/asan/.local/review/`, with timestamped
+prefixes. Existing options are restored after the run. If a process-exit timeout
+recurs, retain and inspect these logs before considering another run; do not
+hide it with an increased timeout or a sanitizer suppression.
+
 Alternatively, use an x64 Native Tools Command Prompt and run CMake directly,
 passing `-DPython3_EXECUTABLE=<absolute path to .venv/Scripts/python.exe>`.
 

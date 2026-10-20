@@ -26,6 +26,24 @@ New-Item -ItemType Directory -Force (Join-Path $root '.local/review') | Out-Null
 if ($LASTEXITCODE) { throw "Configure failed: $LASTEXITCODE" }
 & cmake --build --preset $Preset
 if ($LASTEXITCODE) { throw "Build failed: $LASTEXITCODE" }
-& ctest --preset $Preset --verbose 2>&1 |
-    Tee-Object -FilePath (Join-Path $root ".local/review/$Preset-tests.txt")
-if ($LASTEXITCODE) { throw "Tests failed: $LASTEXITCODE" }
+$previousAsanOptions = $env:ASAN_OPTIONS
+try {
+    if ($Preset -eq 'asan') {
+        # CTest executables run in the build tree; pytest children run at the root.
+        # A relative prefix avoids drive-letter parsing in ASAN_OPTIONS.
+        New-Item -ItemType Directory -Force (Join-Path $root 'build/asan/.local/review') | Out-Null
+        $asanLogPrefix = ".local/review/asan-$((Get-Date).ToString('yyyyMMdd-HHmmss'))"
+        $diagnosticOptions = "verbosity=1:log_path=$asanLogPrefix"
+        $env:ASAN_OPTIONS = if ($previousAsanOptions) {
+            "${previousAsanOptions}:$diagnosticOptions"
+        } else {
+            $diagnosticOptions
+        }
+        Write-Output "ASan diagnostics: $asanLogPrefix.<pid> under the root and build/asan"
+    }
+    & ctest --preset $Preset --verbose 2>&1 |
+        Tee-Object -FilePath (Join-Path $root ".local/review/$Preset-tests.txt")
+    if ($LASTEXITCODE) { throw "Tests failed: $LASTEXITCODE" }
+} finally {
+    $env:ASAN_OPTIONS = $previousAsanOptions
+}

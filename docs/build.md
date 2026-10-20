@@ -3,7 +3,7 @@
 Requirements: CMake 3.20+, Ninja, Python 3.11+, and either Visual Studio 2022 C++
 Build Tools on Windows or GCC 12+/Clang 15+ on Linux. Initial CMake configuration
 needs network access to fetch GoogleTest. Google Benchmark is fetched only when
-`ME_BUILD_BENCHMARKS=ON`; M1 has no benchmark targets.
+`ME_BUILD_BENCHMARKS=ON`; there are no benchmark targets yet.
 
 ## Windows
 
@@ -58,8 +58,9 @@ directory when changing compiler.
 | `tsan` | Explicitly unsupported | TSan, `-O1 -g`, frame pointers |
 
 Release is reserved for benchmarks. Project C++ targets use `/W4 /WX` on MSVC
-and `-Wall -Wextra -Wpedantic -Werror` elsewhere. `me` is an empty interface
-library in M1; its first smoke test checks C++20 compilation.
+and `-Wall -Wextra -Wpedantic -Werror` elsewhere. `me` contains the header-only
+span parser. `me_platform` supplies native file mappings; `itch_parse` is the
+diagnostic executable used by the differential integration tests.
 
 CTest runs both GoogleTest and pytest. Python tooling is pinned in
 `requirements-dev.txt`, including clang-format 19.1.5 for both local use and CI.
@@ -68,8 +69,13 @@ Activate `.venv` or use its executable paths before running these checks:
 ```sh
 ruff check .
 ruff format --check .
-clang-format --dry-run --Werror include/me/me.hpp tests/smoke_test.cpp
+git ls-files '*.cpp' '*.hpp' | xargs clang-format --dry-run --Werror
 ```
+
+The last command uses a POSIX shell. In PowerShell, pass the paths returned by
+`git ls-files '*.cpp' '*.hpp'` as arguments to `clang-format`.
+CTest supplies pytest with the executable from its own build preset through
+`--parser`; direct pytest runs can supply that option explicitly.
 
 CI tests debug and ASan on Windows/MSVC and Linux/GCC and Clang, and checks
 formatting and Python lint. The Ubuntu TSan job is declared but disabled until

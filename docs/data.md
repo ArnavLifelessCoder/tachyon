@@ -48,9 +48,10 @@ The full day remains ignored under `data/`.
 
 M2's C++ versus `python/ref_parser.py` count comparison must run on
 `01302019.AAPL-MSFT-SPY.itch` and match every per-type count in its manifest.
-The parser comparison is pending M2 implementation; the current CI tests check
-framing, counts, all required types, selected locates, directory mappings, size,
-and hash. Synthetic data remains additional edge-case coverage.
+CTest's Python integration suite runs this comparison against the built native
+parser. Other tests check framing, counts, all required types, selected locates,
+directory mappings, size, and hash. Synthetic data remains additional edge-case
+coverage. See [parser behavior and validation](parser.md).
 
 `01302019.first100000.itch` is retained as an administrative-prefix fixture.
 It has no book messages and does not satisfy the real book-fixture requirement.

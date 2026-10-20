@@ -3,6 +3,7 @@
 import argparse
 import hashlib
 import json
+import os
 from datetime import date
 from pathlib import Path
 from urllib.request import urlopen
@@ -50,11 +51,15 @@ def download(day: date, destination: Path, *, expected_size: int | None = None) 
                 output.close()
                 partial.unlink()
                 raise
-    # Exclusive creation also protects against an output created during the download.
-    # A hard link publishes the already-complete file on both Windows and POSIX.
+    # Prefer exclusive publication. On filesystems without hard links, rename
+    # only when the destination is absent. Failed publication retains the data.
     try:
         destination.hardlink_to(partial)
-    finally:
+    except OSError:
+        if destination.exists() or destination.is_symlink():
+            raise
+        os.replace(partial, destination)
+    else:
         partial.unlink()
     return {"url": url, "bytes": total, "sha256": digest.hexdigest(), "path": str(destination)}
 

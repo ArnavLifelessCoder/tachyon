@@ -5,16 +5,20 @@
 #include <charconv>
 #include <cstddef>
 #include <cstdint>
+#include <filesystem>
+#include <iostream>
 #include <memory>
 #include <optional>
 #include <random>
 #include <span>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <type_traits>
 #include <vector>
 
 #include "me/itch_parser.hpp"
+#include "platform/mapped_file.hpp"
 
 namespace {
 std::uint64_t seed = 0x123456789abcdef0ULL;
@@ -108,15 +112,105 @@ TEST(Parser, RejectsKnownLengthMismatchAndPreservesPrefixStats) {
   }
 }
 
-TEST(Parser, RandomBytesExactAllocationAndUnalignedInput) {
+struct Corpus {
+  std::vector<std::byte> data;
+  std::vector<std::size_t> boundaries{0};
+  explicit Corpus(const std::filesystem::path& path) {
+    const me::platform::MappedFile file(path);
+    data.assign(file.bytes().begin(), file.bytes().end());
+    std::size_t offset = 0;
+    while (offset < data.size()) {
+      if (data.size() - offset < 2) throw std::runtime_error("truncated seed prefix");
+      const auto length = (std::to_integer<unsigned int>(data[offset]) << 8) |
+                          std::to_integer<unsigned int>(data[offset + 1]);
+      if (length == 0) {
+        if (offset + 2 != data.size()) throw std::runtime_error("nonfinal seed terminator");
+        data.resize(offset);
+        break;
+      }
+      if (length > data.size() - offset - 2) throw std::runtime_error("truncated seed payload");
+      offset += length + 2;
+      boundaries.push_back(offset);
+    }
+  }
+};
+
+TEST(Parser, MutatedCorpusExactAllocationAndUnalignedInput) {
   std::mt19937_64 random(seed);
   SCOPED_TRACE("seed=" + std::to_string(seed));
+  const std::filesystem::path fixtures(ME_FIXTURE_DIR);
+  const Corpus synthetic(fixtures / "synthetic.itch");
+  const Corpus real(fixtures / "01302019.AAPL-MSFT-SPY.itch");
+  ASSERT_GT(synthetic.boundaries.size(), 1U);
+  ASSERT_GT(real.boundaries.size(), 65U);
+  std::array<std::uint64_t, 256> decoded{};
+  std::array<std::size_t, 6> mutations{};
+  std::array<std::size_t, 5> length_mutations{};
+  std::size_t trials_with_frames = 0;
   for (std::size_t trial = 0; trial < 10000; ++trial) {
     SCOPED_TRACE(trial);
-    const auto size = static_cast<std::size_t>(random() % 2048);
+    // Alternate synthetic-only, real-only, and concatenated seed streams. All
+    // mutation locations include the first frame; no prefix is protected.
+    std::vector<std::byte> mutated;
+    if (trial % 4 != 1) mutated = synthetic.data;
+    if (trial % 4 != 0) {
+      const auto count = static_cast<std::size_t>(8 + random() % 57);
+      const auto first = static_cast<std::size_t>(random() % (real.boundaries.size() - count));
+      mutated.insert(mutated.end(), real.data.begin() + real.boundaries[first],
+                     real.data.begin() + real.boundaries[first + count]);
+    }
+    std::vector<std::size_t> frames;
+    for (std::size_t offset = 0; offset < mutated.size();) {
+      frames.push_back(offset);
+      const auto length = (std::to_integer<unsigned int>(mutated[offset]) << 8) |
+                          std::to_integer<unsigned int>(mutated[offset + 1]);
+      offset += length + 2;
+    }
+    const auto frame = frames[random() % frames.size()];
+    const auto position = static_cast<std::size_t>(random() % mutated.size());
+    const auto mutation = trial % mutations.size();
+    ++mutations[mutation];
+    switch (mutation) {
+      case 0:
+        for (std::size_t flip = 0, n = 1 + random() % 4; flip < n; ++flip) {
+          mutated[random() % mutated.size()] ^= static_cast<std::byte>(1U << (random() % 8));
+        }
+        break;
+      case 1: {
+        const auto original = (std::to_integer<unsigned int>(mutated[frame]) << 8) |
+                              std::to_integer<unsigned int>(mutated[frame + 1]);
+        const auto variant = (trial / mutations.size()) % length_mutations.size();
+        ++length_mutations[variant];
+        const std::array<unsigned int, 5> replacements{original - 1, original + 1, 0, 65535,
+                                                       static_cast<unsigned int>(random() & 65535)};
+        auto length = replacements[variant];
+        if (length == original) length ^= 1;
+        mutated[frame] = static_cast<std::byte>((length >> 8) & 255);
+        mutated[frame + 1] = static_cast<std::byte>(length & 255);
+        break;
+      }
+      case 2:
+        mutated[frame + 2] ^= static_cast<std::byte>(1 + random() % 255);
+        break;
+      case 3:
+        mutated.resize(position);
+        break;
+      case 4: {
+        std::vector<std::byte> inserted(1 + random() % 8);
+        for (auto& byte : inserted) byte = static_cast<std::byte>(random() & 255);
+        mutated.insert(mutated.begin() + position, inserted.begin(), inserted.end());
+        break;
+      }
+      case 5: {
+        const auto count = std::min<std::size_t>(1 + random() % 8, mutated.size() - position);
+        mutated.erase(mutated.begin() + position, mutated.begin() + position + count);
+        break;
+      }
+    }
+    const auto size = mutated.size();
     // End exactly at the allocation boundary so ASan catches any lookahead.
     auto storage = std::make_unique<std::byte[]>(size + 1);
-    for (std::size_t i = 0; i < size + 1; ++i) storage[i] = static_cast<std::byte>(random() & 255);
+    std::copy(mutated.begin(), mutated.end(), storage.get() + 1);
     const std::span<const std::byte> bytes(storage.get() + 1, size);
     Counter handler;
     me::itch::Stats stats;
@@ -128,7 +222,17 @@ TEST(Parser, RandomBytesExactAllocationAndUnalignedInput) {
     }
     EXPECT_EQ(stats.messages, handler.known + handler.unknown);
     EXPECT_LE(stats.bytes, size);
+    trials_with_frames += stats.messages != 0;
+    for (unsigned char kind : std::string("SRAFECXDUP")) decoded[kind] += stats.counts[kind];
   }
+  std::cout << "seed=" << seed << " trials_with_frames=" << trials_with_frames << "/10000\n";
+  EXPECT_GT(trials_with_frames, 7500U);
+  for (unsigned char kind : std::string("SRAFECXDUP")) {
+    std::cout << "decoded." << kind << '=' << decoded[kind] << '\n';
+    EXPECT_GT(decoded[kind], 0U) << "type=" << kind;
+  }
+  for (auto count : mutations) EXPECT_GT(count, 0U);
+  for (auto count : length_mutations) EXPECT_GT(count, 0U);
 }
 }  // namespace
 

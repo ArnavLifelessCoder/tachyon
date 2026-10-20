@@ -32,6 +32,23 @@ and a non-cross trade. The generation command's byte count, SHA-256, and per-typ
 counts are recorded in `tests/fixtures/synthetic.manifest.json`. Tests reproduce the file exactly
 and check framing against independent expected lengths.
 
+## Real fixture for M2
+
+`tests/fixtures/01302019.first100000.itch` contains the first 100,000 messages
+from `01302019.NASDAQ_ITCH50.gz`. Its adjacent manifest records the source URL
+and filename, message count, byte count, SHA-256, and per-type counts.
+It also records the full compressed source's size and SHA-256, the uncompressed
+byte count, and the result of reading every gzip member through its integrity
+check. The full day remains ignored under `data/`.
+It contains the session start, stock directories, and administrative messages.
+The synthetic fixture supplies the order/execution cases absent from this
+initial directory section of the real feed.
+
+M2's C++ versus Python-reference count comparison must include this real fixture.
+The synthetic fixture is additional coverage, not a replacement for that check.
+CI verifies the committed real fixture's framing, exact counts, size, and hash
+without downloading the full day.
+
 ## Cut a fixture
 
 ```sh

@@ -71,8 +71,54 @@ integrity before starting the C++ process. It writes to a unique directory under
 the repository's ignored `.tmp/`, maps the resulting raw file in C++, and removes
 the scratch directory after success or failure. Decompression is outside the
 parse loop. Raw input goes directly to the mapped executable. The launcher has
-a 120-second child-process timeout; invoke the native executable on a prepared
+a 20-second child-process timeout; invoke the native executable on a prepared
 raw file for longer runs.
+
+### Batch diagnostics
+
+`itch_parse --batch [--events]` reads one UTF-8 filesystem path per line from
+standard input. Paths can contain spaces and Unicode but not line breaks.
+Each input produces one JSON line, in the same order:
+`{"status":0,"result":{...}}`. Status 0 contains the normal counts or events,
+status 2 contains a parse error and offset, and status 1 contains
+`{"error":"io_error","message":...}`. A failed input does not stop later inputs.
+The process exits 0 after consuming the list, including a list containing failed
+inputs; a protocol, input-stream, or output-stream failure exits 1. An empty
+list emits no output. Raw files are mapped and unmapped separately.
+
+`python.parse_file.run_parser_batch` sends the list through standard input, so
+the Windows command-line length limit does not constrain corpus size. It captures
+stdout and stderr in repository-local temporary files and applies one 20-second
+deadline to the entire invocation. On timeout it preserves the captured output
+on the exception, reports the last announced input path (including its seed), and
+does not retry. A timeout before any input announcement lists the batch inputs.
+
+The executable flushes `itch_parse: main entered` to stderr as its first action
+in `main`/`wmain`, and `itch_parse: main returning status=N` immediately before
+return, after local argument storage has been destroyed. Batch processing also
+flushes `itch_parse: input index=N` before each mapping. These diagnostic markers
+are separate from JSON stdout.
+
+### MSVC ASan launch investigation
+
+`scripts/probe_parser_launches.py` repeatedly launches the instrumented executable
+on one unchanged fixture and stops at the first timeout or failure, without
+retrying. The captured run is in `results/m2/asan-launch-probe.json`: the first
+52 launches completed, and launch 53 timed out at the 20-second deadline on the
+484-byte synthetic fixture. Its stderr contained both `main entered` and
+`main returning status=0`. Neither marker was missing. This observed stall is
+after successful parsing and the final marker before return from `wmain`, rather
+than inside the parser or mapping lifetime. The exact runtime/OS exit mechanism
+is not established by these markers.
+
+Batching reduces the number of launches exposed to this MSVC ASan exit stall;
+it does not claim to repair the sanitizer runtime. A future timeout still fails
+the test immediately with captured markers and input context. To characterize
+a recurrence, run from a Visual Studio developer shell:
+
+```powershell
+./.venv/Scripts/python.exe scripts/probe_parser_launches.py --parser build/asan/itch_parse.exe --launches 1000 --output results/m2/asan-launch-probe.json
+```
 
 ## Validation
 
@@ -98,6 +144,9 @@ crossed-book analysis belongs to M3. A second differential test writes 200 mutat
 fixture streams and a seed/hash manifest into its pytest temporary directory.
 It compares full event output for accepted inputs and `{error, offset}` for
 rejected inputs. Failed assertions include the case seed and saved input path.
+Each differential test writes all 200 inputs first and invokes batch mode once.
+The field test uses a distinct `seed-N.itch` file for every seed, avoiding
+rewrites of paths recently mapped by a Windows child process.
 
 A separate allocation probe replaces ordinary `new`/`new[]` and runs the real
 book fixture through a counting handler. Its Python runner reads the fixture

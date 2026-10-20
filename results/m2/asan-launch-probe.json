@@ -1,0 +1,437 @@
+{
+  "platform": "Windows-11-10.0.26300-SP0",
+  "python": "3.13.15",
+  "executable": "build/asan/itch_parse.exe",
+  "fixture": "synthetic.itch",
+  "fixture_sha256": "24742d09e2ce22c134fd65abe68304c49ebe2f46cdc987756a04cac46c20698d",
+  "requested_launches": 1000,
+  "timeout_seconds": 20,
+  "stop_on_first_failure": true,
+  "records": [
+    {
+      "launch": 1,
+      "status": "passed",
+      "seconds": 6.551320400001714,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 2,
+      "status": "passed",
+      "seconds": 1.6373545000096783,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 3,
+      "status": "passed",
+      "seconds": 1.566466499993112,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 4,
+      "status": "passed",
+      "seconds": 2.544902199995704,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 5,
+      "status": "passed",
+      "seconds": 1.248093100002734,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 6,
+      "status": "passed",
+      "seconds": 1.2181825000006938,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 7,
+      "status": "passed",
+      "seconds": 1.6507510999945225,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 8,
+      "status": "passed",
+      "seconds": 1.2123141000047326,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 9,
+      "status": "passed",
+      "seconds": 1.405730799990124,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 10,
+      "status": "passed",
+      "seconds": 1.3173823000106495,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 11,
+      "status": "passed",
+      "seconds": 0.6911812000034843,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 12,
+      "status": "passed",
+      "seconds": 0.6283100000000559,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 13,
+      "status": "passed",
+      "seconds": 0.5491141999955289,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 14,
+      "status": "passed",
+      "seconds": 0.5112074000062421,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 15,
+      "status": "passed",
+      "seconds": 0.5103300000046147,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 16,
+      "status": "passed",
+      "seconds": 0.6487697000120534,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 17,
+      "status": "passed",
+      "seconds": 0.6742128999903798,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 18,
+      "status": "passed",
+      "seconds": 0.7861590999964392,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 19,
+      "status": "passed",
+      "seconds": 0.6548576999921352,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 20,
+      "status": "passed",
+      "seconds": 0.5262112000054913,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 21,
+      "status": "passed",
+      "seconds": 0.7277001999900676,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 22,
+      "status": "passed",
+      "seconds": 0.5251640999922529,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 23,
+      "status": "passed",
+      "seconds": 0.6104342000035103,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 24,
+      "status": "passed",
+      "seconds": 0.5131454000074882,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 25,
+      "status": "passed",
+      "seconds": 0.5955809000006411,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 26,
+      "status": "passed",
+      "seconds": 0.4409660000092117,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 27,
+      "status": "passed",
+      "seconds": 0.5438002000009874,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 28,
+      "status": "passed",
+      "seconds": 0.631327399998554,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 29,
+      "status": "passed",
+      "seconds": 0.4848517000064021,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 30,
+      "status": "passed",
+      "seconds": 0.496076900002663,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 31,
+      "status": "passed",
+      "seconds": 0.48040810000384226,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 32,
+      "status": "passed",
+      "seconds": 0.5203697999968426,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 33,
+      "status": "passed",
+      "seconds": 0.5662302999990061,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 34,
+      "status": "passed",
+      "seconds": 0.5297410000057425,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 35,
+      "status": "passed",
+      "seconds": 0.559743999998318,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 36,
+      "status": "passed",
+      "seconds": 0.5582156999880681,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 37,
+      "status": "passed",
+      "seconds": 0.4944582000025548,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 38,
+      "status": "passed",
+      "seconds": 0.5244068000029074,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 39,
+      "status": "passed",
+      "seconds": 0.47261389999766834,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 40,
+      "status": "passed",
+      "seconds": 0.4917126999935135,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 41,
+      "status": "passed",
+      "seconds": 0.4977452000021003,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 42,
+      "status": "passed",
+      "seconds": 0.5519436000031419,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 43,
+      "status": "passed",
+      "seconds": 0.56040600000415,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 44,
+      "status": "passed",
+      "seconds": 0.4747519999946235,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 45,
+      "status": "passed",
+      "seconds": 0.5313585999974748,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 46,
+      "status": "passed",
+      "seconds": 0.7373625000036554,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 47,
+      "status": "passed",
+      "seconds": 0.6191239000036148,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 48,
+      "status": "passed",
+      "seconds": 0.5029638999985764,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 49,
+      "status": "passed",
+      "seconds": 0.508252600004198,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 50,
+      "status": "passed",
+      "seconds": 0.6393377999920631,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 51,
+      "status": "passed",
+      "seconds": 0.49108089999936055,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 52,
+      "status": "passed",
+      "seconds": 0.48052779999852646,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": 0
+    },
+    {
+      "launch": 53,
+      "status": "timeout",
+      "seconds": 20.198673500010045,
+      "entered_main": true,
+      "returning_main": true,
+      "returncode": null,
+      "stderr": "itch_parse: main entered\r\nitch_parse: main returning status=0\r\n"
+    }
+  ]
+}

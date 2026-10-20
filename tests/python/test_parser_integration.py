@@ -9,14 +9,19 @@ import pytest
 from python.itch_writer import HEADER, SCHEMAS, encode_event, frame
 from python.parse_file import ROOT, run_parser
 from python.ref_parser import ParseError, parse
+from tests.fuzz_corpus import write_corpus
 
 FIXTURES = ROOT / "tests" / "fixtures"
 
 
-def cpp(source, executable, *, events=False):
-    result = run_parser(source, executable, events=events)
-    assert result.returncode == 0, result.stdout + result.stderr
-    return json.loads(result.stdout)
+def cpp(source, executable, *, events=False, context=""):
+    try:
+        result = run_parser(source, executable, events=events)
+        assert result.returncode == 0, result.stdout + result.stderr
+        return json.loads(result.stdout)
+    except Exception as error:
+        error.add_note(f"{context} input={source}")
+        raise
 
 
 @pytest.mark.parametrize("name", ["synthetic", "01302019.first100000", "01302019.AAPL-MSFT-SPY"])
@@ -34,7 +39,7 @@ def test_cpp_reference_and_manifest_counts(parser_executable, name):
 def test_seeded_field_differential(parser_executable, tmp_path, request):
     base = request.config.getoption("--seed")
     source = tmp_path / "random.itch"
-    for seed in range(base, base + 20):
+    for seed in range(base, base + 200):
         rng = random.Random(seed)
         frames = []
         for _ in range(500):
@@ -51,9 +56,42 @@ def test_seeded_field_differential(parser_executable, tmp_path, request):
                 frames.append(frame(b"\xff" + rng.randbytes(rng.randrange(40))))
         data = b"".join(frames) + (b"\0\0" if seed % 2 else b"")
         source.write_bytes(data)
-        assert cpp(source, parser_executable, events=True) == parse(data, events=True), (
-            f"seed={seed}"
+        assert cpp(source, parser_executable, events=True, context=f"seed={seed}") == parse(
+            data, events=True
+        ), f"seed={seed}"
+
+
+def test_mutated_corpus_differential(parser_executable, tmp_path, request):
+    directory = tmp_path / "mutated-corpus"
+    base = request.config.getoption("--seed")
+    entries = write_corpus(FIXTURES, directory, seed=base, count=200)
+    successes, errors = 0, 0
+    for entry in entries:
+        source = directory / entry["file"]
+        context = f"seed={entry['seed']} mutation={entry['mutation']} input={source}"
+        try:
+            try:
+                expected = parse(source.read_bytes(), events=True)
+                expected_status = 0
+                successes += 1
+            except ParseError as error:
+                expected = {"error": error.code, "offset": error.offset}
+                expected_status = 2
+                errors += 1
+            result = run_parser(source, parser_executable, events=True)
+            assert result.returncode == expected_status, result.stdout + result.stderr
+            assert json.loads(result.stdout) == expected
+        except Exception as error:
+            error.add_note(context)
+            raise
+    assert successes > 0 and errors > 0, f"seed={base} successes={successes} errors={errors}"
+    (directory / "comparison.json").write_text(
+        json.dumps(
+            {"seed": base, "streams": len(entries), "successes": successes, "errors": errors}
         )
+        + "\n",
+        encoding="utf-8",
+    )
 
 
 @pytest.mark.parametrize("kind", list(SCHEMAS))

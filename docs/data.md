@@ -32,22 +32,28 @@ and a non-cross trade. The generation command's byte count, SHA-256, and per-typ
 counts are recorded in `tests/fixtures/synthetic.manifest.json`. Tests reproduce the file exactly
 and check framing against independent expected lengths.
 
-## Real fixture for M2
+## Real book fixture for M2
 
-`tests/fixtures/01302019.first100000.itch` contains the first 100,000 messages
-from `01302019.NASDAQ_ITCH50.gz`. Its adjacent manifest records the source URL
-and filename, message count, byte count, SHA-256, and per-type counts.
-It also records the full compressed source's size and SHA-256, the uncompressed
-byte count, and the result of reading every gzip member through its integrity
-check. The full day remains ignored under `data/`.
-It contains the session start, stock directories, and administrative messages.
-The synthetic fixture supplies the order/execution cases absent from this
-initial directory section of the real feed.
+`tests/fixtures/01302019.AAPL-MSFT-SPY.itch` keeps every S and R message and
+every message for AAPL (locate 14), MSFT (5217), and SPY (7291), starting at
+the beginning of `01302019.NASDAQ_ITCH50.gz`. It stops before the first retained
+frame that would reach 5,000,000 bytes. It contains all A/F/E/C/X/D/U/P message
+types, including executions with price (C). Keeping every selected-locate event
+from the start preserves the order history within the cut.
 
-M2's C++ versus Python-reference count comparison must include this real fixture.
-The synthetic fixture is additional coverage, not a replacement for that check.
-CI verifies the committed real fixture's framing, exact counts, size, and hash
-without downloading the full day.
+The adjacent manifest records the symbols, locates, source URL and filename,
+command, message count, byte count, SHA-256, and counts for every retained type.
+It also records the full source's size, SHA-256, and gzip integrity check.
+The full day remains ignored under `data/`.
+
+M2's C++ versus `python/ref_parser.py` count comparison must run on
+`01302019.AAPL-MSFT-SPY.itch` and match every per-type count in its manifest.
+The parser comparison is pending M2 implementation; the current CI tests check
+framing, counts, all required types, selected locates, directory mappings, size,
+and hash. Synthetic data remains additional edge-case coverage.
+
+`01302019.first100000.itch` is retained as an administrative-prefix fixture.
+It has no book messages and does not satisfy the real book-fixture requirement.
 
 ## Cut a fixture
 
@@ -60,6 +66,21 @@ of complete messages, and produces raw BinaryFILE framing. It rejects early EOF,
 truncated frames, and a session terminator before the requested count. Output
 must be strictly below 5 MB. It does not append an end-of-session marker because
 a cut is not a complete trading session. It never overwrites an existing output.
+
+To retain a set of stocks from day start instead:
+
+```sh
+python scripts/make_fixture.py data/01302019.NASDAQ_ITCH50.gz tests/fixtures/01302019.AAPL-MSFT-SPY.itch --locates 14 5217 7291
+```
+
+`--locates` and `--messages` are mutually exclusive. Filter mode retains all
+S/R frames regardless of locate, plus all types (including unknown types) for
+the chosen locates. It stops at EOF, a session terminator, or immediately before
+the first retained frame that would reach the size limit. It never drops a
+selected event and continues with later events to fill spare space.
+Its JSON output records the selected directory mappings, per-type counts,
+size, source messages consumed, and stop reason. Malformed framing removes the
+new output; existing files are never overwritten.
 
 ## Download a real day
 

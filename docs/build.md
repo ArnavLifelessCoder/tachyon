@@ -23,7 +23,10 @@ uv pip install --python .venv/Scripts/python.exe -r requirements-dev.txt
 
 The helper loads the installed VS 2022 x64 developer environment if needed,
 configures CMake with the local Python environment, builds with Ninja, and runs
-CTest verbosely. Complete test output is saved under `results/m1/`.
+CTest verbosely. Complete test output is saved under ignored `.local/review/`;
+review evidence belongs in the pull request description, not in `results/`.
+GoogleTest discovery runs at test time with `DISCOVERY_MODE PRE_TEST` and the
+default discovery timeout.
 
 Alternatively, use an x64 Native Tools Command Prompt and run CMake directly,
 passing `-DPython3_EXECUTABLE=<absolute path to .venv/Scripts/python.exe>`.
@@ -59,7 +62,8 @@ and `-Wall -Wextra -Wpedantic -Werror` elsewhere. `me` is an empty interface
 library in M1; its first smoke test checks C++20 compilation.
 
 CTest runs both GoogleTest and pytest. Python tooling is pinned in
-`requirements-dev.txt`. Before committing, run:
+`requirements-dev.txt`, including clang-format 19.1.5 for both local use and CI.
+Activate `.venv` or use its executable paths before running these checks:
 
 ```sh
 ruff check .

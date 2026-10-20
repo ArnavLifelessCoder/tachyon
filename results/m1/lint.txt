@@ -1,3 +1,0 @@
-All checks passed!
-8 files already formatted
-clang-format --dry-run --Werror include/me/me.hpp tests/smoke_test.cpp: exit 0

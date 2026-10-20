@@ -29,7 +29,7 @@ The committed `tests/fixtures/synthetic.itch` is generated from the adjacent JSO
 with `--end-session`. It contains all ten required message types, two symbols,
 partial and full executions, a cancel, a replacement with a new ID, deletions,
 and a non-cross trade. The generation command's byte count, SHA-256, and per-type
-counts are recorded in `results/m1/fixture.json`. Tests reproduce the file exactly
+counts are recorded in `tests/fixtures/synthetic.manifest.json`. Tests reproduce the file exactly
 and check framing against independent expected lengths.
 
 ## Cut a fixture
@@ -44,10 +44,9 @@ truncated frames, and a session terminator before the requested count. Output
 must be strictly below 5 MB. It does not append an end-of-session marker because
 a cut is not a complete trading session. It never overwrites an existing output.
 
-## Download a real day later
+## Download a real day
 
-No full-day file is needed or downloaded for M1. When the real-data milestone is
-started, the downloader can be invoked explicitly:
+The downloader is invoked explicitly; CI does not download full-day files:
 
 ```sh
 python scripts/download_itch.py 2019-01-30
@@ -60,10 +59,12 @@ byte count using `--expected-size`. If both values are present they must agree.
 Successful output includes the measured byte count and SHA-256. The hash is an
 audit record, not an independently verified provider checksum.
 
-Publishing uses a same-directory hard link to avoid overwriting a concurrently
-created output. The destination filesystem must support hard links, such as NTFS
-or common Linux filesystems. Existing final or partial files cause an error;
-interrupted writes remove the partial file created by this invocation.
+Publishing first tries a same-directory hard link. If hard links are unavailable
+and the destination is absent, it falls back to `os.replace`. Avoid concurrent
+writers to that destination when using the fallback: the absence check and rename
+are separate operations. If publication fails, the completed `.part` is retained
+for recovery. Existing final or partial files cause an error; interrupted writes
+remove the incomplete partial file created by this invocation.
 Tests mock the download response and never download market data.
 
 Native C++ file mapping, synchronization, rename, and affinity adapters will live

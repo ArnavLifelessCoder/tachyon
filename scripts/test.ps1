@@ -21,11 +21,11 @@ $python = Join-Path $root '.venv/Scripts/python.exe'
 if (-not (Test-Path -LiteralPath $python)) {
     throw 'Create .venv and install requirements-dev.txt first.'
 }
-New-Item -ItemType Directory -Force (Join-Path $root 'results/m1') | Out-Null
+New-Item -ItemType Directory -Force (Join-Path $root '.local/review') | Out-Null
 & cmake --preset $Preset "-DPython3_EXECUTABLE=$python"
 if ($LASTEXITCODE) { throw "Configure failed: $LASTEXITCODE" }
 & cmake --build --preset $Preset
 if ($LASTEXITCODE) { throw "Build failed: $LASTEXITCODE" }
 & ctest --preset $Preset --verbose 2>&1 |
-    Tee-Object -FilePath (Join-Path $root "results/m1/$Preset-tests.txt")
+    Tee-Object -FilePath (Join-Path $root ".local/review/$Preset-tests.txt")
 if ($LASTEXITCODE) { throw "Tests failed: $LASTEXITCODE" }

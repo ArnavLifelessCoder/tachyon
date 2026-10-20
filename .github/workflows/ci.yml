@@ -10,13 +10,20 @@ permissions:
 
 jobs:
   test:
-    name: ${{ matrix.os }} / ${{ matrix.preset }}
+    name: ${{ matrix.os }} / ${{ matrix.compiler }} / ${{ matrix.preset }}
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest]
-        preset: [debug, asan]
+        include:
+          - { os: windows-latest, compiler: cl, preset: debug }
+          - { os: windows-latest, compiler: cl, preset: asan }
+          - { os: ubuntu-latest, compiler: g++, preset: debug }
+          - { os: ubuntu-latest, compiler: g++, preset: asan }
+          - { os: ubuntu-latest, compiler: clang++, preset: debug }
+          - { os: ubuntu-latest, compiler: clang++, preset: asan }
     runs-on: ${{ matrix.os }}
+    env:
+      CXX: ${{ matrix.compiler }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6

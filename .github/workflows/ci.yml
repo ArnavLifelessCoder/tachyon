@@ -45,7 +45,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v5
         with:
-          name: tests-${{ matrix.os }}-${{ matrix.preset }}
+          name: tests-${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.preset }}
           path: build/${{ matrix.preset }}/Testing/Temporary/LastTest.log
 
   lint:

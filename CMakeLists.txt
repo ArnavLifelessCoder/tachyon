@@ -90,8 +90,9 @@ if(BUILD_TESTING)
   add_executable(parser_allocation_test tests/parser_allocation_test.cpp)
   target_link_libraries(parser_allocation_test PRIVATE me me_platform)
   me_strict_warnings(parser_allocation_test)
-  add_test(NAME parser_allocations COMMAND parser_allocation_test
-    "${PROJECT_SOURCE_DIR}/tests/fixtures/01302019.AAPL-MSFT-SPY.itch")
+  add_test(NAME parser_allocations COMMAND "${Python3_EXECUTABLE}"
+    "${PROJECT_SOURCE_DIR}/tests/run_allocation_probe.py" "$<TARGET_FILE:parser_allocation_test>"
+    "${PROJECT_SOURCE_DIR}/tests/fixtures/01302019.AAPL-MSFT-SPY.manifest.json")
   add_test(NAME python_tests COMMAND "${Python3_EXECUTABLE}" -m pytest
     -v -ra "${PROJECT_SOURCE_DIR}/tests/python"
     --parser "$<TARGET_FILE:itch_parse>"

@@ -1,6 +1,8 @@
 """Guard against artifact collisions between compiler matrix jobs."""
 
+import json
 import re
+import subprocess
 from pathlib import Path
 
 
@@ -19,3 +21,23 @@ def test_test_matrix_artifacts_have_unique_names():
         assert "${{" not in name
         names.append(name)
     assert len(names) == len(set(names)), f"Artifact names collide: {names}"
+
+
+def test_native_suites_use_one_launch_each(parser_executable):
+    build = parser_executable.parent
+    cache = (build / "CMakeCache.txt").read_text(encoding="utf-8")
+    ctest = re.search(r"^CMAKE_CTEST_COMMAND:INTERNAL=(.+)$", cache, re.MULTILINE).group(1)
+    result = subprocess.run(
+        [ctest, "--test-dir", str(build), "--show-only=json-v1"],
+        capture_output=True,
+        text=True,
+        timeout=20,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    tests = json.loads(result.stdout)["tests"]
+    for executable in ("me_tests", "parser_tests", "mapping_tests"):
+        commands = [
+            test["command"] for test in tests if Path(test["command"][0]).stem == executable
+        ]
+        assert len(commands) == 1, f"{executable}: {len(commands)} process launches"
+        assert len(commands[0]) == 1, f"{executable}: expected the entire suite, without a filter"

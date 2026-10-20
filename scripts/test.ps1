@@ -1,6 +1,7 @@
 param(
     [ValidateSet('debug', 'asan', 'release')]
-    [string]$Preset = 'debug'
+    [string]$Preset = 'debug',
+    [switch]$SkipBuild
 )
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
@@ -22,10 +23,12 @@ if (-not (Test-Path -LiteralPath $python)) {
     throw 'Create .venv and install requirements-dev.txt first.'
 }
 New-Item -ItemType Directory -Force (Join-Path $root '.local/review') | Out-Null
-& cmake --preset $Preset "-DPython3_EXECUTABLE=$python"
-if ($LASTEXITCODE) { throw "Configure failed: $LASTEXITCODE" }
-& cmake --build --preset $Preset
-if ($LASTEXITCODE) { throw "Build failed: $LASTEXITCODE" }
+if (-not $SkipBuild) {
+    & cmake --preset $Preset "-DPython3_EXECUTABLE=$python"
+    if ($LASTEXITCODE) { throw "Configure failed: $LASTEXITCODE" }
+    & cmake --build --preset $Preset
+    if ($LASTEXITCODE) { throw "Build failed: $LASTEXITCODE" }
+}
 $previousAsanOptions = $env:ASAN_OPTIONS
 try {
     if ($Preset -eq 'asan') {

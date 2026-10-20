@@ -111,6 +111,16 @@ after successful parsing and the final marker before return from `wmain`, rather
 than inside the parser or mapping lifetime. The exact runtime/OS exit mechanism
 is not established by these markers.
 
+The first full acceptance sequence subsequently stopped during
+`mapping_tests --gtest_list_tests`: it printed its three test names, then
+discovery timed out. That failed sequence is retained in
+`results/m2/windows-suite-runs-before-native-batch.json`. CTest now registers
+each entire GoogleTest executable directly, removing discovery and per-case
+process launches. All 38 native cases still run, in three processes. Together
+with the allocation probe and Python suite, there are five CTest entries.
+A regression checks the configured CTest commands to prevent a return to
+per-case launches or filters. Native suites have a 20-second timeout.
+
 Batching reduces the number of launches exposed to this MSVC ASan exit stall;
 it does not claim to repair the sanitizer runtime. A future timeout still fails
 the test immediately with captured markers and input context. To characterize
@@ -163,3 +173,9 @@ To repeat a seed (use the corresponding executable path on Linux):
 
 CTest runs these checks in both debug and ASan configurations. TSan begins with
 the threaded components in M4.
+
+On Windows, `./scripts/check_parser_suites.ps1` runs the complete debug and ASan
+suites three consecutive times each. It stops on the first failure, preserves
+each verbose log under `.local/review/`, and records CTest and total invocation
+times in `results/m2/windows-suite-runs.json`. Each preset is configured and built
+once before its three test runs.

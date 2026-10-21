@@ -100,6 +100,7 @@ if(BUILD_TESTING)
     --parser "$<TARGET_FILE:itch_parse>"
     --basetemp "${CMAKE_BINARY_DIR}/pytest-tmp"
     -o "cache_dir=${CMAKE_BINARY_DIR}/pytest-cache")
+  set_tests_properties(parser_allocations PROPERTIES TIMEOUT 60)
   set_tests_properties(python_tests PROPERTIES
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 300)
 endif()

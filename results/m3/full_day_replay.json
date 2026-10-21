@@ -1,0 +1,172 @@
+{
+  "source_file": "01302019.NASDAQ_ITCH50.gz",
+  "source_sha256": "8c97b5b13bc451c012c2466fb7e258da134dab29aa47b67fe7b0088c78e870be",
+  "source_uncompressed_bytes": 11245883092,
+  "command": "python scripts/replay_day.py --replay build/release/book_replay.exe",
+  "decompress_seconds": 0.0,
+  "replay": {
+    "bytes": 11245883092,
+    "messages": 368366634,
+    "terminated": false,
+    "replay_seconds": 120.901,
+    "counts": {
+      "A": 162970455,
+      "B": 116,
+      "C": 158886,
+      "D": 158273361,
+      "E": 8096995,
+      "F": 1725898,
+      "H": 8805,
+      "I": 3684511,
+      "J": 62,
+      "L": 193769,
+      "P": 1326184,
+      "Q": 17430,
+      "R": 8714,
+      "S": 6,
+      "U": 27222746,
+      "V": 1,
+      "X": 4669874,
+      "Y": 8821
+    },
+    "adds": 164696353,
+    "executes": 8255881,
+    "cancels": 4669874,
+    "deletes": 158273361,
+    "replaces": 27222746,
+    "trades": 1326184,
+    "unknown_refs": 0,
+    "duplicate_adds": 0,
+    "locate_mismatches": 0,
+    "over_executions": 0,
+    "crossed_events": 598,
+    "locked_events": 65,
+    "crossed_episodes": 8,
+    "crossed_or_locked_events_by_hour": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      8,
+      0,
+      14,
+      329,
+      312,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "symbols_with_crossed_or_locked_books": 4,
+    "top_crossed_symbols": [
+      {
+        "locate": 7458,
+        "symbol": "SXTC",
+        "events": 617
+      },
+      {
+        "locate": 6090,
+        "symbol": "PHUN",
+        "events": 24
+      },
+      {
+        "locate": 2053,
+        "symbol": "DLPN",
+        "events": 14
+      },
+      {
+        "locate": 2697,
+        "symbol": "EYEN",
+        "events": 8
+      }
+    ],
+    "crossed_episodes_detail": [
+      {
+        "symbol": "EYEN",
+        "start": "07:27:31",
+        "end": "07:27:33",
+        "symbol_messages": 2,
+        "trading_state_at_start": "Q"
+      },
+      {
+        "symbol": "EYEN",
+        "start": "07:27:52",
+        "end": "07:29:02",
+        "symbol_messages": 6,
+        "trading_state_at_start": "Q"
+      },
+      {
+        "symbol": "DLPN",
+        "start": "09:46:52",
+        "end": "09:47:07",
+        "symbol_messages": 12,
+        "trading_state_at_start": "P"
+      },
+      {
+        "symbol": "DLPN",
+        "start": "09:50:24",
+        "end": "09:50:27",
+        "symbol_messages": 2,
+        "trading_state_at_start": "P"
+      },
+      {
+        "symbol": "PHUN",
+        "start": "10:09:06",
+        "end": "10:09:21",
+        "symbol_messages": 2,
+        "trading_state_at_start": "P"
+      },
+      {
+        "symbol": "PHUN",
+        "start": "10:10:19",
+        "end": "10:18:58",
+        "symbol_messages": 22,
+        "trading_state_at_start": "P"
+      },
+      {
+        "symbol": "SXTC",
+        "start": "10:27:49",
+        "end": "10:32:49",
+        "symbol_messages": 305,
+        "trading_state_at_start": "P"
+      },
+      {
+        "symbol": "SXTC",
+        "start": "11:44:22",
+        "end": "11:49:22",
+        "symbol_messages": 312,
+        "trading_state_at_start": "P"
+      }
+    ],
+    "books": 8695,
+    "resting_levels_at_end": 0,
+    "live_orders_at_end": 0,
+    "peak_live_orders": 1742866
+  },
+  "machine": {
+    "cpu": "AMD Ryzen 9 8940HX with Radeon Graphics",
+    "cores": 16,
+    "logical_processors": 32,
+    "max_mhz": 2401,
+    "ram_bytes": 16162496512,
+    "os": "Microsoft Windows 11 Home build 26300",
+    "power_plan": "Power Scheme GUID: 381b4222-f694-41f0-9685-ff5bb260df2e  (Balanced)",
+    "kernel": "10.0.26300",
+    "python": "3.13.15",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "flags": "release preset: MSVC /O2 /DNDEBUG, ME_BOOK_CHECKS=0",
+    "machine": "AMD64"
+  },
+  "date": "2026-10-21T15:49:07+0530"
+}

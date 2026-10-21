@@ -328,7 +328,9 @@ void compare_full(const me::BookBuilder& fast, ref::RefBuilder& slow, std::uint1
     ASSERT_EQ(depth(fast.book(locate), side, 1 << 20), slow.book(locate).depth(side, 1 << 20))
         << "locate=" << locate << " side=" << static_cast<int>(side);
   }
-  if (fast.book(locate)) ASSERT_TRUE(fast.book(locate)->valid());
+  if (fast.book(locate)) {
+    ASSERT_TRUE(fast.book(locate)->valid());
+  }
 }
 
 TEST(BookDifferential, TopFiveMatchesReferenceAfterEveryEvent) {
@@ -369,7 +371,9 @@ TEST(BookDifferential, TopFiveMatchesReferenceAfterEveryEvent) {
             << " crossed_or_locked_events=" << crossed << '\n';
   // Guard against a generator that stops producing the interesting cases.
   EXPECT_GE(events, seeds * 50);
-  if (seeds >= 100) EXPECT_GT(crossed, 0U);
+  if (seeds >= 100) {
+    EXPECT_GT(crossed, 0U);
+  }
 }
 
 // ---------------------------------------------------------------- real fixture

@@ -35,6 +35,7 @@ struct Episode {
 // Forwards every message to the book builder and records crossed episodes plus
 // trading-state changes, so each crossed book can be explained afterwards.
 struct ReplayHandler {
+  explicit ReplayHandler(me::BookBuilder& b) : builder(b) {}
   me::BookBuilder& builder;
   std::vector<char> trading_state = std::vector<char>(me::BookBuilder::max_locates, '?');
   std::vector<std::int64_t> open_episode =
@@ -82,7 +83,7 @@ std::string clock(std::uint64_t ns) {
 int run(const std::filesystem::path& path) {
   const me::platform::MappedFile file(path);
   me::BookBuilder builder(1 << 22);
-  ReplayHandler handler{builder};
+  ReplayHandler handler(builder);
   me::itch::Stats parse_stats;
   const auto start = std::chrono::steady_clock::now();
   me::itch::parse(file.bytes(), handler, &parse_stats);

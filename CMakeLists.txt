@@ -110,6 +110,10 @@ if(BUILD_TESTING)
   add_executable(book_allocation_test tests/book_allocation_test.cpp)
   target_link_libraries(book_allocation_test PRIVATE me me_platform)
   me_strict_warnings(book_allocation_test)
+  # The probe replaces global new/delete with malloc/free on purpose; GCC cannot see
+  # that the pair matches once both are inlined.
+  target_compile_options(book_allocation_test PRIVATE
+    $<$<CXX_COMPILER_ID:GNU>:-Wno-mismatched-new-delete>)
   add_test(NAME book_allocations COMMAND book_allocation_test
     "${PROJECT_SOURCE_DIR}/tests/fixtures/01302019.AAPL-MSFT-SPY.itch")
   set_tests_properties(book_allocations PROPERTIES TIMEOUT 60)

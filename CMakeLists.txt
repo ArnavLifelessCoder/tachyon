@@ -57,6 +57,9 @@ me_strict_warnings(me_platform)
 add_executable(itch_parse src/parser_cli.cpp src/platform/cli_${ME_PLATFORM}.cpp)
 target_link_libraries(itch_parse PRIVATE me me_platform)
 me_strict_warnings(itch_parse)
+add_executable(book_replay src/book_replay.cpp)
+target_link_libraries(book_replay PRIVATE me me_platform)
+me_strict_warnings(book_replay)
 if(BUILD_TESTING)
   set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
   set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
@@ -95,6 +98,21 @@ if(BUILD_TESTING)
   add_test(NAME parser_allocations COMMAND "${Python3_EXECUTABLE}"
     "${PROJECT_SOURCE_DIR}/tests/run_allocation_probe.py" "$<TARGET_FILE:parser_allocation_test>"
     "${PROJECT_SOURCE_DIR}/tests/fixtures/01302019.AAPL-MSFT-SPY.manifest.json")
+  add_executable(book_tests tests/book_test.cpp)
+  target_link_libraries(book_tests PRIVATE me me_platform GTest::gtest)
+  target_include_directories(book_tests PRIVATE "${PROJECT_SOURCE_DIR}/tests")
+  target_compile_definitions(book_tests PRIVATE
+    ME_FIXTURE_DIR="${PROJECT_SOURCE_DIR}/tests/fixtures")
+  me_strict_warnings(book_tests)
+  add_test(NAME book_tests COMMAND book_tests)
+  # 10,000 differential seeds; the slowest native suite (about 4 minutes under MSVC ASan).
+  set_tests_properties(book_tests PROPERTIES TIMEOUT 900)
+  add_executable(book_allocation_test tests/book_allocation_test.cpp)
+  target_link_libraries(book_allocation_test PRIVATE me me_platform)
+  me_strict_warnings(book_allocation_test)
+  add_test(NAME book_allocations COMMAND book_allocation_test
+    "${PROJECT_SOURCE_DIR}/tests/fixtures/01302019.AAPL-MSFT-SPY.itch")
+  set_tests_properties(book_allocations PROPERTIES TIMEOUT 60)
   add_test(NAME python_tests COMMAND "${Python3_EXECUTABLE}" -m pytest
     -v -ra "${PROJECT_SOURCE_DIR}/tests/python"
     --parser "$<TARGET_FILE:itch_parse>"

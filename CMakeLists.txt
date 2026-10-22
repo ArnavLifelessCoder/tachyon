@@ -72,6 +72,26 @@ me_strict_warnings(itch_parse)
 add_executable(book_replay src/book_replay.cpp)
 target_link_libraries(book_replay PRIVATE me me_platform)
 me_strict_warnings(book_replay)
+# Python bindings (M7). Built only without sanitizers: an instrumented extension
+# cannot be loaded into an uninstrumented Python interpreter.
+option(ME_BUILD_PYTHON "Build the me_py pybind11 module" ON)
+if(ME_BUILD_PYTHON AND ME_SANITIZER STREQUAL "none")
+  if(Python3_EXECUTABLE AND NOT Python_EXECUTABLE)
+    set(Python_EXECUTABLE "${Python3_EXECUTABLE}")
+  endif()
+  find_package(Python 3.11 REQUIRED COMPONENTS Interpreter Development.Module)
+  set(PYBIND11_FINDPYTHON ON)  # use the Python found above, not pybind11's legacy search
+  FetchContent_Declare(pybind11
+    GIT_REPOSITORY https://github.com/pybind/pybind11.git
+    GIT_TAG v2.13.6
+    GIT_SHALLOW TRUE
+    SYSTEM)
+  FetchContent_MakeAvailable(pybind11)
+  pybind11_add_module(me_py src/bindings/me_py.cpp)
+  target_link_libraries(me_py PRIVATE me me_platform)
+  me_strict_warnings(me_py)
+endif()
+
 if(BUILD_TESTING)
   set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
   set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
@@ -149,9 +169,14 @@ if(BUILD_TESTING)
   add_test(NAME pipeline_tests COMMAND pipeline_tests)
   # The concurrency label selects what the Linux TSan job runs.
   set_tests_properties(pipeline_tests PROPERTIES TIMEOUT 600 LABELS concurrency)
+  # An empty --module-dir tells the binding tests this configuration has no module.
+  set(ME_PY_TEST_ARGS "--module-dir=")
+  if(TARGET me_py)
+    set(ME_PY_TEST_ARGS "--module-dir=$<TARGET_FILE_DIR:me_py>")
+  endif()
   add_test(NAME python_tests COMMAND "${Python3_EXECUTABLE}" -m pytest
     -v -ra "${PROJECT_SOURCE_DIR}/tests/python"
-    --parser "$<TARGET_FILE:itch_parse>"
+    --parser "$<TARGET_FILE:itch_parse>" ${ME_PY_TEST_ARGS}
     --basetemp "${CMAKE_BINARY_DIR}/pytest-tmp"
     -o "cache_dir=${CMAKE_BINARY_DIR}/pytest-cache")
   if(NOT ME_SANITIZER STREQUAL "thread")

@@ -10,13 +10,16 @@ book per symbol and is checked against a slow reference book on 10,000 random
 streams and on a full trading day. A three-thread pipeline (parser, book,
 publisher) connected by lock-free SPSC rings produces the same books and BBO
 sequence as the single-threaded run. A price-time matching engine is checked
-against a simple Python matcher on 1,000 random order streams. Measured
+against a simple Python matcher on 1,000 random order streams. A pybind11
+module exposes book replay and matching to Python, with a small
+market-making backtest as a demo. Measured
 throughput and latency, with the machine and method, are in
 [benchmarks](docs/benchmarks.md).
 
 See [build and test instructions](docs/build.md),
 [data tooling](docs/data.md), [parser design](docs/parser.md),
 [book reconstruction](docs/book.md), [threaded pipeline](docs/pipeline.md),
-[matching engine](docs/matching.md), and [benchmarks](docs/benchmarks.md).
+[matching engine](docs/matching.md), [Python bindings](docs/python.md), and
+[benchmarks](docs/benchmarks.md).
 The final architecture and benchmark documentation
 will accompany the completed implementation.

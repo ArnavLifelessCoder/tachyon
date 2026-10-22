@@ -1,0 +1,15 @@
+{
+  "note": "demo of the me_py bindings, not a trading claim (see the fill model)",
+  "symbol": "AAPL",
+  "step_ms": 100,
+  "quote_size": 100,
+  "inventory_limit": 500,
+  "messages_replayed": 149213,
+  "unknown_refs": 0,
+  "samples": 198289,
+  "fills": 198,
+  "buys": 99,
+  "sells": 99,
+  "final_inventory": 0,
+  "final_pnl_dollars_marked_to_mid": -976.0
+}

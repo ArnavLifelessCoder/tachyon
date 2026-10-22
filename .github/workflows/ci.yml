@@ -38,7 +38,14 @@ jobs:
       - name: Configure
         run: cmake --preset ${{ matrix.preset }}
       - name: Build
-        run: cmake --build --preset ${{ matrix.preset }} --parallel 2
+        shell: bash
+        run: |
+          set -o pipefail
+          if ! cmake --build --preset ${{ matrix.preset }} --parallel 2 2>&1 | tee build.log; then
+            # Job logs need a GitHub sign-in but annotations are public: surface the errors.
+            grep -E 'error|warning' build.log | head -n 10 | sed 's/^/::error::/'
+            exit 1
+          fi
       - name: Test
         if: runner.os != 'Windows'
         run: ctest --preset ${{ matrix.preset }} --verbose
@@ -90,5 +97,18 @@ jobs:
           python-version: '3.11'
       - run: python -m pip install -r requirements-dev.txt
       - run: cmake --preset tsan
-      - run: cmake --build --preset tsan --parallel 2
-      - run: ctest --preset tsan --verbose -L concurrency
+      - name: Build
+        run: |
+          set -o pipefail
+          if ! cmake --build --preset tsan --parallel 2 2>&1 | tee build.log; then
+            grep -E 'error|warning' build.log | head -n 10 | sed 's/^/::error::/'
+            exit 1
+          fi
+      - name: Test
+        run: |
+          set -o pipefail
+          if ! ctest --preset tsan --verbose -L concurrency 2>&1 | tee test.log; then
+            grep -E 'ThreadSanitizer|FAILED|Failure|Timeout|error' test.log | head -n 10 \
+              | sed 's/^/::error::/'
+            exit 1
+          fi

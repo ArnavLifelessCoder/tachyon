@@ -1,3 +1,5 @@
+#include "pipeline.hpp"
+
 #include <gtest/gtest.h>
 
 #include <algorithm>
@@ -16,7 +18,6 @@
 #include "me/histogram.hpp"
 #include "me/spsc_ring.hpp"
 #include "me/tsc.hpp"
-#include "pipeline.hpp"
 #include "platform/mapped_file.hpp"
 
 namespace {
@@ -194,7 +195,8 @@ TEST(Pipeline, ThreadedMatchesSingleThreadedOnRealFixture) {
   EXPECT_NE(single.checkpoints[13], single.checkpoints[12]);
   EXPECT_EQ(single.book.unknown_refs, 0U);
   EXPECT_GT(single.bbo_changes, 0U);
-  for (std::size_t capacity : {std::size_t{4}, std::size_t{1} << 16}) {  // tiny ring: constant backpressure
+  for (std::size_t capacity :
+       {std::size_t{4}, std::size_t{1} << 16}) {  // tiny ring: constant backpressure
     SCOPED_TRACE("ring_capacity=" + std::to_string(capacity));
     config.ring_capacity = capacity;
     expect_same(single, me::pipeline::run_threaded(file.bytes(), config));

@@ -92,7 +92,8 @@ class Publisher {
   void consume(const Update& u) noexcept {
     ++result_.updates;
     const std::uint64_t ticks = u.book_tsc >= u.parse_tsc ? u.book_tsc - u.parse_tsc : 0;
-    result_.latency_ns.record(static_cast<std::uint64_t>(static_cast<double>(ticks) * ns_per_tick_));
+    result_.latency_ns.record(
+        static_cast<std::uint64_t>(static_cast<double>(ticks) * ns_per_tick_));
     Bbo& last = last_[u.locate];
     const Bbo now{u.bid, u.ask, u.bid_size, u.ask_size};
     if (now == last) return;
@@ -125,9 +126,10 @@ struct Stamp {
   }
   void on_unknown(unsigned char kind, std::span<const std::byte> payload) {
     const auto locate =
-        payload.size() >= 3 ? static_cast<std::uint16_t>((std::to_integer<unsigned>(payload[1]) << 8) |
-                                                         std::to_integer<unsigned>(payload[2]))
-                            : std::uint16_t{0};
+        payload.size() >= 3
+            ? static_cast<std::uint16_t>((std::to_integer<unsigned>(payload[1]) << 8) |
+                                         std::to_integer<unsigned>(payload[2]))
+            : std::uint16_t{0};
     sink(Event{tsc::now(), Unknown{kind, locate}});
   }
 };

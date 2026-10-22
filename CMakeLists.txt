@@ -51,9 +51,18 @@ if(WIN32)
 else()
   set(ME_PLATFORM posix)
 endif()
-add_library(me_platform STATIC src/platform/mapped_file_${ME_PLATFORM}.cpp)
+find_package(Threads REQUIRED)
+add_library(me_platform STATIC src/platform/mapped_file_${ME_PLATFORM}.cpp
+  src/platform/affinity_${ME_PLATFORM}.cpp)
 target_include_directories(me_platform PUBLIC "${PROJECT_SOURCE_DIR}/src")
+target_link_libraries(me_platform PUBLIC Threads::Threads)
 me_strict_warnings(me_platform)
+add_library(me_pipeline STATIC src/pipeline.cpp)
+target_link_libraries(me_pipeline PUBLIC me me_platform)
+me_strict_warnings(me_pipeline)
+add_executable(pipeline_replay src/pipeline_replay.cpp)
+target_link_libraries(pipeline_replay PRIVATE me_pipeline)
+me_strict_warnings(pipeline_replay)
 add_executable(itch_parse src/parser_cli.cpp src/platform/cli_${ME_PLATFORM}.cpp)
 target_link_libraries(itch_parse PRIVATE me me_platform)
 me_strict_warnings(itch_parse)
@@ -117,6 +126,14 @@ if(BUILD_TESTING)
   add_test(NAME book_allocations COMMAND book_allocation_test
     "${PROJECT_SOURCE_DIR}/tests/fixtures/01302019.AAPL-MSFT-SPY.itch")
   set_tests_properties(book_allocations PROPERTIES TIMEOUT 60)
+  add_executable(pipeline_tests tests/pipeline_test.cpp)
+  target_link_libraries(pipeline_tests PRIVATE me_pipeline GTest::gtest)
+  target_compile_definitions(pipeline_tests PRIVATE
+    ME_FIXTURE_DIR="${PROJECT_SOURCE_DIR}/tests/fixtures")
+  me_strict_warnings(pipeline_tests)
+  add_test(NAME pipeline_tests COMMAND pipeline_tests)
+  # The concurrency label selects what the Linux TSan job runs.
+  set_tests_properties(pipeline_tests PROPERTIES TIMEOUT 600 LABELS concurrency)
   add_test(NAME python_tests COMMAND "${Python3_EXECUTABLE}" -m pytest
     -v -ra "${PROJECT_SOURCE_DIR}/tests/python"
     --parser "$<TARGET_FILE:itch_parse>"

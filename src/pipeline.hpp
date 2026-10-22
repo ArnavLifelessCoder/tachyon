@@ -19,10 +19,9 @@ struct Unknown {
 };
 struct End {};
 
-using Message =
-    std::variant<itch::SystemEvent, itch::Directory, itch::Add, itch::AddMpid, itch::Execute,
-                 itch::ExecutePrice, itch::Cancel, itch::Delete, itch::Replace, itch::Trade,
-                 Unknown, End>;
+using Message = std::variant<itch::SystemEvent, itch::Directory, itch::Add, itch::AddMpid,
+                             itch::Execute, itch::ExecutePrice, itch::Cancel, itch::Delete,
+                             itch::Replace, itch::Trade, Unknown, End>;
 
 // Parser -> book ring item.
 struct Event {
@@ -70,7 +69,7 @@ struct Result {
   std::uint64_t bbo_digest = 0;   // the sequence of published BBO changes
   std::uint64_t checkpoints[max_checkpoints] = {};  // book digests every checkpoint_every
   std::size_t checkpoint_count = 0;
-  Histogram latency_ns;           // parse timestamp to book-updated timestamp
+  Histogram latency_ns;  // parse timestamp to book-updated timestamp
   double seconds = 0;
   double ticks_per_ns = 0;
   bool invariant_tsc = false;

@@ -70,10 +70,19 @@ jobs:
       - run: ruff check .
       - run: ruff format --check .
 
-  # M4 adds concurrency tests and enables this job when the ring buffer exists.
+  # ThreadSanitizer runs the multi-threaded suites (CTest label "concurrency"):
+  # the SPSC ring stress tests and the threaded pipeline. It is the gate for data
+  # races; Windows has no TSan.
   tsan:
-    if: false
+    name: ubuntu-latest / ${{ matrix.compiler }} / tsan
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [g++, clang++]
     runs-on: ubuntu-latest
+    env:
+      CXX: ${{ matrix.compiler }}
+      TSAN_OPTIONS: halt_on_error=1 second_deadlock_stack=1
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
@@ -82,4 +91,4 @@ jobs:
       - run: python -m pip install -r requirements-dev.txt
       - run: cmake --preset tsan
       - run: cmake --build --preset tsan --parallel 2
-      - run: ctest --preset tsan --verbose
+      - run: ctest --preset tsan --verbose -L concurrency

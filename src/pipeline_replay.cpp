@@ -20,14 +20,14 @@ void print(std::ostream& out, const me::pipeline::Result& r) {
       << ",\"bbo_changes\":" << r.bbo_changes << ",\"unknown_refs\":" << r.book.unknown_refs
       << ",\"live_orders_at_end\":" << r.book.live_orders << ",\"book_digest\":\"" << std::hex
       << r.book_digest << "\",\"bbo_digest\":\"" << r.bbo_digest << std::dec
-      << "\",\"seconds\":" << r.seconds << ",\"messages_per_second\":"
-      << static_cast<double>(r.parse.messages) / r.seconds << ",\"latency_ns\":{\"count\":"
-      << h.count() << ",\"p50\":" << h.percentile(0.5) << ",\"p90\":" << h.percentile(0.9)
-      << ",\"p99\":" << h.percentile(0.99) << ",\"p999\":" << h.percentile(0.999)
-      << ",\"max\":" << h.max() << ",\"mean\":" << h.mean() << "},\"ticks_per_ns\":"
-      << r.ticks_per_ns << ",\"invariant_tsc\":" << (r.invariant_tsc ? "true" : "false")
-      << ",\"pinned\":[" << r.pinned[0] << ',' << r.pinned[1] << ',' << r.pinned[2]
-      << "],\"checkpoint_digests\":[";
+      << "\",\"seconds\":" << r.seconds
+      << ",\"messages_per_second\":" << static_cast<double>(r.parse.messages) / r.seconds
+      << ",\"latency_ns\":{\"count\":" << h.count() << ",\"p50\":" << h.percentile(0.5)
+      << ",\"p90\":" << h.percentile(0.9) << ",\"p99\":" << h.percentile(0.99)
+      << ",\"p999\":" << h.percentile(0.999) << ",\"max\":" << h.max() << ",\"mean\":" << h.mean()
+      << "},\"ticks_per_ns\":" << r.ticks_per_ns
+      << ",\"invariant_tsc\":" << (r.invariant_tsc ? "true" : "false") << ",\"pinned\":["
+      << r.pinned[0] << ',' << r.pinned[1] << ',' << r.pinned[2] << "],\"checkpoint_digests\":[";
   for (std::size_t i = 0; i < r.checkpoint_count; ++i) {
     out << (i ? "," : "") << '"' << std::hex << r.checkpoints[i] << std::dec << '"';
   }
@@ -66,9 +66,9 @@ int run(int argc, char** argv) {
       single.bbo_digest == threaded.bbo_digest && single.bbo_changes == threaded.bbo_changes;
   std::cout << "{\"books_identical\":" << (books_equal ? "true" : "false")
             << ",\"checkpoint_every_messages\":" << config.checkpoint_every
-            << ",\"bbo_sequence_identical\":" << (bbo_equal ? "true" : "false")
-            << ",\"cpus\":[" << config.parser_cpu << ',' << config.book_cpu << ','
-            << config.publisher_cpu << "],\"single\":";
+            << ",\"bbo_sequence_identical\":" << (bbo_equal ? "true" : "false") << ",\"cpus\":["
+            << config.parser_cpu << ',' << config.book_cpu << ',' << config.publisher_cpu
+            << "],\"single\":";
   print(std::cout, single);
   std::cout << ",\"threaded\":";
   print(std::cout, threaded);

@@ -101,12 +101,17 @@ if(BUILD_TESTING)
   add_test(NAME mapping_tests COMMAND mapping_tests)
   set_tests_properties(smoke_tests mapping_tests PROPERTIES TIMEOUT 20)
   set_tests_properties(parser_tests PROPERTIES TIMEOUT 60)
-  add_executable(parser_allocation_test tests/parser_allocation_test.cpp)
-  target_link_libraries(parser_allocation_test PRIVATE me me_platform)
-  me_strict_warnings(parser_allocation_test)
-  add_test(NAME parser_allocations COMMAND "${Python3_EXECUTABLE}"
-    "${PROJECT_SOURCE_DIR}/tests/run_allocation_probe.py" "$<TARGET_FILE:parser_allocation_test>"
-    "${PROJECT_SOURCE_DIR}/tests/fixtures/01302019.AAPL-MSFT-SPY.manifest.json")
+  # Allocation probes replace global operator new/delete. Clang's statically linked
+  # TSan runtime defines them too, and TSan only runs the concurrency suites, so
+  # the probes are left out of TSan builds.
+  if(NOT ME_SANITIZER STREQUAL "thread")
+    add_executable(parser_allocation_test tests/parser_allocation_test.cpp)
+    target_link_libraries(parser_allocation_test PRIVATE me me_platform)
+    me_strict_warnings(parser_allocation_test)
+    add_test(NAME parser_allocations COMMAND "${Python3_EXECUTABLE}"
+      "${PROJECT_SOURCE_DIR}/tests/run_allocation_probe.py" "$<TARGET_FILE:parser_allocation_test>"
+      "${PROJECT_SOURCE_DIR}/tests/fixtures/01302019.AAPL-MSFT-SPY.manifest.json")
+  endif()
   add_executable(book_tests tests/book_test.cpp)
   target_link_libraries(book_tests PRIVATE me me_platform GTest::gtest)
   target_include_directories(book_tests PRIVATE "${PROJECT_SOURCE_DIR}/tests")
@@ -116,16 +121,18 @@ if(BUILD_TESTING)
   add_test(NAME book_tests COMMAND book_tests)
   # 10,000 differential seeds; the slowest native suite (about 4 minutes under MSVC ASan).
   set_tests_properties(book_tests PROPERTIES TIMEOUT 900)
-  add_executable(book_allocation_test tests/book_allocation_test.cpp)
-  target_link_libraries(book_allocation_test PRIVATE me me_platform)
-  me_strict_warnings(book_allocation_test)
-  # The probe replaces global new/delete with malloc/free on purpose; GCC cannot see
-  # that the pair matches once both are inlined.
-  target_compile_options(book_allocation_test PRIVATE
-    $<$<CXX_COMPILER_ID:GNU>:-Wno-mismatched-new-delete>)
-  add_test(NAME book_allocations COMMAND book_allocation_test
-    "${PROJECT_SOURCE_DIR}/tests/fixtures/01302019.AAPL-MSFT-SPY.itch")
-  set_tests_properties(book_allocations PROPERTIES TIMEOUT 60)
+  if(NOT ME_SANITIZER STREQUAL "thread")
+    add_executable(book_allocation_test tests/book_allocation_test.cpp)
+    target_link_libraries(book_allocation_test PRIVATE me me_platform)
+    me_strict_warnings(book_allocation_test)
+    # The probe replaces global new/delete with malloc/free on purpose; GCC cannot see
+    # that the pair matches once both are inlined.
+    target_compile_options(book_allocation_test PRIVATE
+      $<$<CXX_COMPILER_ID:GNU>:-Wno-mismatched-new-delete>)
+    add_test(NAME book_allocations COMMAND book_allocation_test
+      "${PROJECT_SOURCE_DIR}/tests/fixtures/01302019.AAPL-MSFT-SPY.itch")
+    set_tests_properties(book_allocations PROPERTIES TIMEOUT 60)
+  endif()
   add_executable(pipeline_tests tests/pipeline_test.cpp)
   target_link_libraries(pipeline_tests PRIVATE me_pipeline GTest::gtest)
   target_compile_definitions(pipeline_tests PRIVATE
@@ -139,7 +146,9 @@ if(BUILD_TESTING)
     --parser "$<TARGET_FILE:itch_parse>"
     --basetemp "${CMAKE_BINARY_DIR}/pytest-tmp"
     -o "cache_dir=${CMAKE_BINARY_DIR}/pytest-cache")
-  set_tests_properties(parser_allocations PROPERTIES TIMEOUT 60)
+  if(NOT ME_SANITIZER STREQUAL "thread")
+    set_tests_properties(parser_allocations PROPERTIES TIMEOUT 60)
+  endif()
   set_tests_properties(python_tests PROPERTIES
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 300)
 endif()

@@ -1,0 +1,49 @@
+{
+  "machine": {
+    "cpu": "AMD Ryzen 9 8940HX with Radeon Graphics",
+    "cores": 16,
+    "logical_processors": 32,
+    "max_mhz": 2401,
+    "ram_bytes": 16162496512,
+    "os": "Microsoft Windows 11 Home build 26300",
+    "power_plan": "Power Scheme GUID: 381b4222-f694-41f0-9685-ff5bb260df2e  (Balanced)",
+    "kernel": "10.0.26300",
+    "python": "3.13.15",
+    "compiler": "'cl' is not recognized as an internal or external command,",
+    "flags": "release preset: MSVC 19.44 /O2 /Ob2 /DNDEBUG, ME_BOOK_CHECKS=0",
+    "machine": "AMD64"
+  },
+  "date": "2026-10-22T15:26:36+0530",
+  "source_file": "01302019.NASDAQ_ITCH50.gz",
+  "source_sha256": "8c97b5b13bc451c012c2466fb7e258da134dab29aa47b67fe7b0088c78e870be",
+  "runs": 5,
+  "pinning": "single-threaded modes on CPU 2; pipeline on CPUs ['2', '4', '6']",
+  "turbo": "not disabled (no supported way on this machine); power plan recorded",
+  "benchmark": "parse the first 50000000 messages, single thread",
+  "command": "bench_replay parse <the first 50000000 messages>",
+  "messages": 50000000,
+  "messages_per_second": {
+    "median": 30453200.0,
+    "min": 26069600.0,
+    "max": 49373400.0,
+    "runs": [
+      49373400.0,
+      32071400.0,
+      26069600.0,
+      30453200.0,
+      29097100.0
+    ]
+  },
+  "seconds": {
+    "median": 1.64186,
+    "min": 1.01269,
+    "max": 1.91794,
+    "runs": [
+      1.01269,
+      1.55902,
+      1.91794,
+      1.64186,
+      1.71838
+    ]
+  }
+}

@@ -161,11 +161,21 @@ if(BUILD_TESTING)
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 300)
 endif()
 
+# Whole-system benchmark driver; built in every configuration so CI compiles it,
+# but only meaningful in the release preset.
+add_executable(bench_replay bench/bench_replay.cpp)
+target_link_libraries(bench_replay PRIVATE me_pipeline)
+me_strict_warnings(bench_replay)
+
 if(ME_BUILD_BENCHMARKS)
   set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
+  set(BENCHMARK_ENABLE_GTEST_TESTS OFF CACHE BOOL "" FORCE)
   FetchContent_Declare(googlebenchmark
     GIT_REPOSITORY https://github.com/google/benchmark.git
     GIT_TAG v1.9.2
     GIT_SHALLOW TRUE)
   FetchContent_MakeAvailable(googlebenchmark)
+  add_executable(bench_micro bench/bench_micro.cpp)
+  target_link_libraries(bench_micro PRIVATE me me_platform benchmark::benchmark)
+  me_strict_warnings(bench_micro)
 endif()

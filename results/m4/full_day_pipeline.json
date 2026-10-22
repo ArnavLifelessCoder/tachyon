@@ -1,0 +1,116 @@
+{
+  "source_file": "01302019.NASDAQ_ITCH50.gz",
+  "source_sha256": "8c97b5b13bc451c012c2466fb7e258da134dab29aa47b67fe7b0088c78e870be",
+  "command": "python scripts/pipeline_day.py --pipeline build/release/pipeline_replay.exe --cpus 2 4 6",
+  "result": {
+    "books_identical": true,
+    "checkpoint_every_messages": 25000000,
+    "bbo_sequence_identical": true,
+    "cpus": [
+      2,
+      4,
+      6
+    ],
+    "single": {
+      "messages": 368366634,
+      "updates": 364444399,
+      "bbo_changes": 174890436,
+      "unknown_refs": 0,
+      "live_orders_at_end": 0,
+      "book_digest": "0",
+      "bbo_digest": "d18fdb79fba9d564",
+      "seconds": 192.748,
+      "messages_per_second": 1911130.0,
+      "latency_ns": {
+        "count": 364444399,
+        "p50": 231,
+        "p90": 535,
+        "p99": 1263,
+        "p999": 3487,
+        "max": 124010498,
+        "mean": 295.762
+      },
+      "ticks_per_ns": 2.39545,
+      "invariant_tsc": true,
+      "pinned": [
+        0,
+        0,
+        0
+      ],
+      "checkpoint_digests": [
+        "ec247c92927c65e",
+        "47e08e1b6b69b817",
+        "97ca059dd77598a4",
+        "e6decf00cce02931",
+        "d1b74768323b7abc",
+        "48bb2bf973f3ca6",
+        "e23b61171e91adb9",
+        "d89af5c134729d42",
+        "1bb7b3289015dc9e",
+        "e25c1bb7b00a3d20",
+        "1646aff8750af99",
+        "c39819c9ec88d7b7",
+        "84882a2668ae94f",
+        "53c0b414e6a93c6a"
+      ]
+    },
+    "threaded": {
+      "messages": 368366634,
+      "updates": 364444399,
+      "bbo_changes": 174890436,
+      "unknown_refs": 0,
+      "live_orders_at_end": 0,
+      "book_digest": "0",
+      "bbo_digest": "d18fdb79fba9d564",
+      "seconds": 149.467,
+      "messages_per_second": 2464540.0,
+      "latency_ns": {
+        "count": 364444399,
+        "p50": 22806527,
+        "p90": 31457279,
+        "p99": 45088767,
+        "p999": 171966463,
+        "max": 258326608,
+        "mean": 24262900.0
+      },
+      "ticks_per_ns": 2.39545,
+      "invariant_tsc": true,
+      "pinned": [
+        1,
+        1,
+        1
+      ],
+      "checkpoint_digests": [
+        "ec247c92927c65e",
+        "47e08e1b6b69b817",
+        "97ca059dd77598a4",
+        "e6decf00cce02931",
+        "d1b74768323b7abc",
+        "48bb2bf973f3ca6",
+        "e23b61171e91adb9",
+        "d89af5c134729d42",
+        "1bb7b3289015dc9e",
+        "e25c1bb7b00a3d20",
+        "1646aff8750af99",
+        "c39819c9ec88d7b7",
+        "84882a2668ae94f",
+        "53c0b414e6a93c6a"
+      ]
+    }
+  },
+  "machine": {
+    "cpu": "AMD Ryzen 9 8940HX with Radeon Graphics",
+    "cores": 16,
+    "logical_processors": 32,
+    "max_mhz": 2401,
+    "ram_bytes": 16162496512,
+    "os": "Microsoft Windows 11 Home build 26300",
+    "power_plan": "Power Scheme GUID: 381b4222-f694-41f0-9685-ff5bb260df2e  (Balanced)",
+    "kernel": "10.0.26300",
+    "python": "3.13.15",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "flags": "release preset: MSVC /O2 /DNDEBUG, ME_BOOK_CHECKS=0",
+    "machine": "AMD64"
+  },
+  "date": "2026-10-21T22:19:33+0530"
+}

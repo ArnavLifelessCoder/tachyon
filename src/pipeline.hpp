@@ -56,6 +56,9 @@ struct Config {
   // Every this many messages the book stage records a digest of all books, so
   // runs can be compared mid-day (a full day ends with every book empty).
   std::uint64_t checkpoint_every = 0;  // 0 disables
+  // Threaded run only: release messages at this rate instead of as fast as the
+  // file can be parsed (0 = unpaced). Latency is only meaningful below capacity.
+  double messages_per_second = 0;
 };
 
 inline constexpr std::size_t max_checkpoints = 64;

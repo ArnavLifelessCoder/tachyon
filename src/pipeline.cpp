@@ -120,9 +120,24 @@ class Publisher {
 template <class Sink>
 struct Stamp {
   Sink& sink;
+  // With pacing, message i is released no earlier than start + i * ticks_per_message,
+  // which models a feed arriving at a fixed rate; the parse timestamp is taken at
+  // release, so queueing behind a slow consumer still counts as latency.
+  double ticks_per_message = 0;
+  std::uint64_t start = 0;
+  std::uint64_t released = 0;
+
+  std::uint64_t arrive() noexcept {
+    if (ticks_per_message > 0) {
+      const auto due =
+          start + static_cast<std::uint64_t>(static_cast<double>(released++) * ticks_per_message);
+      while (tsc::now() < due) tsc::cpu_relax();
+    }
+    return tsc::now();
+  }
   template <class M>
   void on(const M& m) {
-    sink(Event{tsc::now(), m});
+    sink(Event{arrive(), m});
   }
   void on_unknown(unsigned char kind, std::span<const std::byte> payload) {
     const auto locate =
@@ -130,7 +145,7 @@ struct Stamp {
             ? static_cast<std::uint16_t>((std::to_integer<unsigned>(payload[1]) << 8) |
                                          std::to_integer<unsigned>(payload[2]))
             : std::uint16_t{0};
-    sink(Event{tsc::now(), Unknown{kind, locate}});
+    sink(Event{arrive(), Unknown{kind, locate}});
   }
 };
 
@@ -194,6 +209,10 @@ Result run_threaded(std::span<const std::byte> input, const Config& config) {
       while (!parsed.try_push(event)) tsc::cpu_relax();
     };
     Stamp<decltype(push)> stamp{push};
+    if (config.messages_per_second > 0) {
+      stamp.ticks_per_message = result->ticks_per_ns * 1e9 / config.messages_per_second;
+      stamp.start = tsc::now();
+    }
     try {
       itch::parse(input, stamp, &result->parse);
     } catch (...) {

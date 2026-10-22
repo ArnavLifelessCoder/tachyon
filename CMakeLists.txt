@@ -56,6 +56,9 @@ add_library(me_platform STATIC src/platform/mapped_file_${ME_PLATFORM}.cpp
   src/platform/affinity_${ME_PLATFORM}.cpp)
 target_include_directories(me_platform PUBLIC "${PROJECT_SOURCE_DIR}/src")
 target_link_libraries(me_platform PUBLIC Threads::Threads)
+# Linked into the me_py shared module as well as executables, so it must be
+# position-independent on Linux.
+set_target_properties(me_platform PROPERTIES POSITION_INDEPENDENT_CODE ON)
 me_strict_warnings(me_platform)
 add_library(me_pipeline STATIC src/pipeline.cpp)
 target_link_libraries(me_pipeline PUBLIC me me_platform)

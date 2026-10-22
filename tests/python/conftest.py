@@ -1,6 +1,8 @@
+import importlib
 import json
 import os
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -35,6 +37,7 @@ def pytest_sessionfinish(session, exitstatus):
 def pytest_addoption(parser):
     parser.addoption("--parser", help="path to the built itch_parse executable")
     parser.addoption("--seed", type=int, default=20261020, help="differential-test base seed")
+    parser.addoption("--module-dir", help="directory containing the built me_py module")
 
 
 @pytest.fixture(scope="session")
@@ -48,3 +51,18 @@ def parser_executable(request):
     executable = Path(supplied).resolve()
     assert executable.is_file(), "Build itch_parse first or supply --parser"
     return executable
+
+
+@pytest.fixture(scope="session")
+def me_py(request):
+    """The pybind11 module, or a skip when this build has none (sanitizer presets)."""
+    supplied = request.config.getoption("--module-dir")
+    if supplied == "":
+        pytest.skip("me_py is not built in this configuration (sanitizer build)")
+    if supplied is None:
+        default = Path(__file__).resolve().parents[2] / "build" / "debug"
+        if not any(default.glob("me_py*")):
+            pytest.skip("me_py is not built in this configuration; pass --module-dir")
+        supplied = default
+    sys.path.insert(0, str(Path(supplied).resolve()))
+    return importlib.import_module("me_py")

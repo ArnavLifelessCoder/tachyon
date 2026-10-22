@@ -43,7 +43,7 @@ jobs:
           set -o pipefail
           if ! cmake --build --preset ${{ matrix.preset }} --parallel 2 2>&1 | tee build.log; then
             # Job logs need a GitHub sign-in but annotations are public: surface the errors.
-            grep -E 'error|warning' build.log | head -n 10 | sed 's/^/::error::/'
+            grep -E 'error|warning|ld:|undefined|cannot find|No such' build.log | head -n 12 | sed 's/^/::error::/'
             exit 1
           fi
       - name: Test
@@ -101,7 +101,7 @@ jobs:
         run: |
           set -o pipefail
           if ! cmake --build --preset tsan --parallel 2 2>&1 | tee build.log; then
-            grep -E 'error|warning' build.log | head -n 10 | sed 's/^/::error::/'
+            grep -E 'error|warning|ld:|undefined|cannot find|No such' build.log | head -n 12 | sed 's/^/::error::/'
             exit 1
           fi
       - name: Test

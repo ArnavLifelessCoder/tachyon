@@ -1,6 +1,6 @@
 # Build and test
 
-Requirements: CMake 3.21+, Ninja, Python 3.11+, and either Visual Studio 2022 C++
+Requirements: CMake 3.25+ (FetchContent SYSTEM for pybind11), Ninja, Python 3.11+, and either Visual Studio 2022 C++
 Build Tools on Windows or GCC 12+/Clang 15+ on Linux. Initial CMake configuration
 needs network access to fetch GoogleTest. Google Benchmark is fetched only when
 `ME_BUILD_BENCHMARKS=ON`; there are no benchmark targets yet.

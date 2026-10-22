@@ -93,11 +93,15 @@ deadline to the entire invocation. On timeout it preserves the captured output
 on the exception, reports the last announced input path (including its seed), and
 does not retry. A timeout before any input announcement lists the batch inputs.
 
-The executable flushes `itch_parse: main entered` to stderr as its first action
-in `main`/`wmain`, and `itch_parse: main returning status=N` immediately before
+With `ITCH_PARSE_TRACE=1` or `ME_TRACE=1`, the executable flushes `itch_parse: main entered` to
+stderr just after checking the environment in `main`/`wmain`, and
+`itch_parse: main returning status=N` immediately before
 return, after local argument storage has been destroyed. Batch processing also
 flushes `itch_parse: input index=N` before each mapping. These diagnostic markers
-are separate from JSON stdout.
+are separate from JSON stdout. Entry/return markers are disabled for every
+other value when neither variable equals `1`. Batch input markers remain enabled
+to identify the active input on timeout. The launch probe and local test helper
+explicitly enable entry/return tracing and restore the previous environment.
 
 ### MSVC ASan launch investigation
 
@@ -113,30 +117,35 @@ is not established by these markers.
 
 The first full acceptance sequence subsequently stopped during
 `mapping_tests --gtest_list_tests`: it printed its three test names, then
-discovery timed out. That failed sequence is retained in
-`results/m2/windows-suite-runs-before-native-batch.json`. CTest now registers
+discovery timed out. That failed sequence is described in the
+[M2 review packet](https://github.com/ArnavLifelessCoder/tachyon/pull/1).
+CTest now registers
 each entire GoogleTest executable directly, removing discovery and per-case
 process launches. All 38 native cases still run, in three processes. Together
 with the allocation probe and Python suite, there are five CTest entries.
 A regression checks the configured CTest commands to prevent a return to
-per-case launches or filters. Native suites have a 20-second timeout.
+per-case launches or filters. The parser suite has a 60-second CTest timeout;
+the other native suites have a 20-second timeout.
 
 With native launches grouped, a later field-differential batch reached input
 198 of 200 before its 20-second deadline, without a return marker. That sequence
-is retained in `results/m2/windows-suite-runs-before-json-buffer.json`. Diagnostic
+is described in the M2 review packet. Diagnostic
 event formatting now appends to a string and uses `std::to_chars` for integers,
 avoiding a formatted stream operation for every field. The deadline and all
 200 seeds with 500 known messages each are unchanged.
 
 The focused validation then captured another exit stall on a three-byte
 malformed input: both markers were present, with return status 2
-(`results/m2/asan-error-exit-stall.json`). Parameterized fixture-count,
+(recorded in the M2 review packet). Parameterized fixture-count,
 binary-boundary, and malformed-input checks now share one batch per group.
 Their individual pytest cases and reference assertions are retained.
 
 Batching reduces the number of launches exposed to this MSVC ASan exit stall;
-it does not claim to repair the sanitizer runtime. A future timeout still fails
-the test immediately with captured markers and input context. To characterize
+it does not claim to repair the sanitizer runtime. A timeout still fails the
+child invocation immediately with captured markers and input context. From M3,
+the Windows test runner applies the [owner-approved retry policy](build.md#sanitizer-gate-and-windows-exit-stalls-m3-onward)
+to the complete CTest suite, preserving both attempts. The standalone launch
+probe still stops on the first failure without retrying. To characterize
 a recurrence, run from a Visual Studio developer shell:
 
 ```powershell
@@ -188,7 +197,9 @@ CTest runs these checks in both debug and ASan configurations. TSan begins with
 the threaded components in M4.
 
 On Windows, `./scripts/check_parser_suites.ps1` runs the complete debug and ASan
-suites three consecutive times each. It stops on the first failure, preserves
+suites three times each. Each run uses the documented Windows stall policy;
+it stops on the first blocking failure, preserves
 each verbose log under `.local/review/`, and records CTest and total invocation
-times in `results/m2/windows-suite-runs.json`. Each preset is configured and built
+times in ignored `.local/review/windows-suite-runs.json` for inclusion in the
+pull request description. Each preset is configured and built
 once before its three test runs.

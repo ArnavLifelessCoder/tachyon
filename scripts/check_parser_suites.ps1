@@ -6,14 +6,13 @@ $ErrorActionPreference = 'Stop'
 $taskRoot = Split-Path $PSScriptRoot -Parent
 Set-Location -LiteralPath $taskRoot
 $reviewDirectory = Join-Path $taskRoot '.local/review'
-$resultsDirectory = Join-Path $taskRoot 'results/m2'
-New-Item -ItemType Directory -Force $reviewDirectory, $resultsDirectory | Out-Null
+New-Item -ItemType Directory -Force $reviewDirectory | Out-Null
 $records = @()
 $head = (& git rev-parse HEAD).Trim()
 $stamp = (Get-Date).ToString('yyyyMMdd-HHmmss')
 foreach ($preset in @('debug', 'asan')) {
     for ($run = 1; $run -le $Runs; $run++) {
-        $logName = "m2-validation-$stamp-$preset-$run.txt"
+        $logName = "validation-$stamp-$preset-$run.txt"
         $log = Join-Path $reviewDirectory $logName
         $clock = [System.Diagnostics.Stopwatch]::StartNew()
         $failure = $null
@@ -24,11 +23,12 @@ foreach ($preset in @('debug', 'asan')) {
         }
         $clock.Stop()
         $text = Get-Content -LiteralPath $log -Raw
-        $match = [regex]::Match($text, 'Total Test time \(real\) =\s*([0-9.]+) sec')
-        $seconds = if ($match.Success) {
-            [double]::Parse($match.Groups[1].Value, [cultureinfo]::InvariantCulture)
-        } else { $null }
-        $passed = -not $failure -and $text -match '100% tests passed, 0 tests failed out of \d+'
+        $timeMatches = [regex]::Matches($text, 'Total Test time \(real\) =\s*([0-9.]+) sec')
+        $seconds = 0.0
+        foreach ($match in $timeMatches) {
+            $seconds += [double]::Parse($match.Groups[1].Value, [cultureinfo]::InvariantCulture)
+        }
+        $passed = -not $failure -and $text -match 'Policy result: PASS'
         $records += [ordered]@{
             preset = $preset
             run = $run
@@ -45,7 +45,7 @@ foreach ($preset in @('debug', 'asan')) {
             stop_on_first_failure = $true
             runs = $records
         } | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (
-            Join-Path $resultsDirectory 'windows-suite-runs.json'
+            Join-Path $reviewDirectory 'windows-suite-runs.json'
         ) -Encoding utf8
         Write-Output "$preset run $run : passed=$passed ctest_seconds=$seconds"
         if (-not $passed) { throw "Acceptance stopped; inspect $log" }

@@ -35,6 +35,9 @@ def test_native_suites_use_one_launch_each(parser_executable):
     )
     assert result.returncode == 0, result.stdout + result.stderr
     tests = json.loads(result.stdout)["tests"]
+    allocation = next(test for test in tests if test["name"] == "parser_allocations")
+    properties = {prop["name"]: prop["value"] for prop in allocation["properties"]}
+    assert properties.get("TIMEOUT") == 60, "Allocation probe needs a bounded CTest deadline"
     for executable in ("me_tests", "parser_tests", "mapping_tests"):
         commands = [
             test["command"] for test in tests if Path(test["command"][0]).stem == executable

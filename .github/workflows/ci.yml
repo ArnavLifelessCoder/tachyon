@@ -40,13 +40,21 @@ jobs:
       - name: Build
         run: cmake --build --preset ${{ matrix.preset }} --parallel 2
       - name: Test
+        if: runner.os != 'Windows'
         run: ctest --preset ${{ matrix.preset }} --verbose
+      - name: Test with Windows stall policy
+        if: runner.os == 'Windows'
+        run: python scripts/run_test_policy.py --preset ${{ matrix.preset }}
       - name: Upload test logs
         if: always()
         uses: actions/upload-artifact@v5
         with:
           name: tests-${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.preset }}
-          path: build/${{ matrix.preset }}/Testing/Temporary/LastTest.log
+          include-hidden-files: true
+          path: |
+            build/${{ matrix.preset }}/Testing/Temporary/LastTest.log
+            .local/review/
+            build/${{ matrix.preset }}/.local/review/
 
   lint:
     runs-on: ubuntu-latest

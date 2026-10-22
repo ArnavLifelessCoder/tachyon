@@ -1,3 +1,4 @@
+import os
 import subprocess
 
 from scripts import probe_parser_launches
@@ -25,10 +26,14 @@ def test_probe_stops_at_timeout_and_records_missing_return(monkeypatch, tmp_path
 
 
 def test_probe_records_pre_main_timeout(monkeypatch, tmp_path):
+    monkeypatch.setenv("ITCH_PARSE_TRACE", "0")
+
     def run(source, executable):
+        assert os.environ["ITCH_PARSE_TRACE"] == "1"
         raise subprocess.TimeoutExpired([str(executable)], 20, stderr=b"")
 
     monkeypatch.setattr(probe_parser_launches, "run_parser", run)
     records = probe_parser_launches.probe(tmp_path / "input", tmp_path / "parser", 100)
     assert len(records) == 1
     assert not records[0]["entered_main"] and not records[0]["returning_main"]
+    assert os.environ["ITCH_PARSE_TRACE"] == "0"

@@ -2,7 +2,6 @@ import gzip
 import hashlib
 import json
 import random
-import subprocess
 
 import pytest
 
@@ -207,7 +206,7 @@ def test_gzip_failure_cleans_temporary_file(parser_executable, tmp_path, mode):
     source.write_bytes(data)
     before = set((ROOT / ".tmp").glob("itch-*"))
     if mode == "parse_error":
-        assert run_parser(source, parser_executable).returncode == 2
+        assert run_parser(source, parser_executable, expected_status=2).returncode == 2
     else:
         with pytest.raises((gzip.BadGzipFile, EOFError)):
             run_parser(source, parser_executable)
@@ -215,8 +214,6 @@ def test_gzip_failure_cleans_temporary_file(parser_executable, tmp_path, mode):
 
 
 def test_cli_missing_input(parser_executable, tmp_path):
-    result = subprocess.run(
-        [str(parser_executable), str(tmp_path / "missing")], capture_output=True, timeout=20
-    )
+    result = run_parser(tmp_path / "missing", parser_executable, expected_status=1)
     assert result.returncode == 1
     assert result.stderr

@@ -5,13 +5,17 @@ import gzip
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from scripts.stall_policy import SANITIZER, process_timeout  # noqa: E402
 
 
-def _invoke(command, sources, *, input_bytes=None):
+def _invoke(command, sources, *, input_bytes=None, expected_status=0):
     scratch = ROOT / ".tmp"
     scratch.mkdir(exist_ok=True)
     # Files let timeout diagnostics be read without waiting for pipe EOF.
@@ -29,6 +33,13 @@ def _invoke(command, sources, *, input_bytes=None):
             error.output = output.read()
             error.stderr = diagnostics.read()
             stderr = error.stderr.decode("utf-8", errors="replace")
+            error.me_timeout = process_timeout(
+                Path(command[0]).stem,
+                expected_status,
+                stderr,
+                error.output.decode("utf-8", errors="replace"),
+                20,
+            )
             indices = re.findall(r"itch_parse: input index=(\d+)", stderr)
             if indices and int(indices[-1]) < len(sources):
                 error.add_note(f"active input={sources[int(indices[-1])]}")
@@ -38,12 +49,15 @@ def _invoke(command, sources, *, input_bytes=None):
             raise
         output.seek(0)
         diagnostics.seek(0)
-        return subprocess.CompletedProcess(
+        result = subprocess.CompletedProcess(
             command,
             result.returncode,
             output.read().decode("utf-8", errors="replace"),
             diagnostics.read().decode("utf-8", errors="replace"),
         )
+        if SANITIZER.search(result.stdout + result.stderr):
+            raise RuntimeError("Sanitizer report from child:\n" + result.stdout + result.stderr)
+        return result
 
 
 def run_parser_batch(sources, executable: Path, *, events=False):
@@ -59,19 +73,21 @@ def run_parser_batch(sources, executable: Path, *, events=False):
     )
 
 
-def run_parser(source: Path, executable: Path, *, events=False):
+def run_parser(source: Path, executable: Path, *, events=False, expected_status=0):
     """Return captured parser output; always remove this invocation's scratch."""
     command = [str(executable.resolve())]
     options = ["--events"] if events else []
     if source.suffix.lower() != ".gz":
-        return _invoke([*command, str(source.resolve()), *options], [source])
+        return _invoke(
+            [*command, str(source.resolve()), *options], [source], expected_status=expected_status
+        )
     scratch = ROOT / ".tmp"
     scratch.mkdir(exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="itch-", dir=scratch) as directory:
         raw = Path(directory) / "input.itch"
         with gzip.open(source, "rb") as compressed, raw.open("xb") as output:
             shutil.copyfileobj(compressed, output, length=1024 * 1024)
-        return _invoke([*command, str(raw), *options], [source])
+        return _invoke([*command, str(raw), *options], [source], expected_status=expected_status)
 
 
 def main():

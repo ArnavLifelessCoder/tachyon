@@ -1,19 +1,13 @@
-#include <cstdio>
 #include <filesystem>
 #include <vector>
 
 #include "parser_cli.hpp"
+#include "platform/main_trace.hpp"
 
 int wmain(int argc, wchar_t** argv) {
-  std::fputs("itch_parse: main entered\n", stderr);
-  std::fflush(stderr);
-  int status = 1;
-  {
+  return me::platform::traced_main("itch_parse", [&] {
     std::vector<std::filesystem::path> args;
     for (int i = 1; i < argc; ++i) args.emplace_back(argv[i]);
-    status = parser_cli(args);
-  }
-  std::fprintf(stderr, "itch_parse: main returning status=%d\n", status);
-  std::fflush(stderr);
-  return status;
+    return parser_cli(args);
+  });
 }

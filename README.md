@@ -14,6 +14,10 @@ or one mishandled replace silently corrupts every book after it), keeping the ho
 path free of locks and heap allocation, and measuring latency honestly on hardware
 that was not set up for it.
 
+**Interactive demo:** [`docs/demo/index.html`](docs/demo/index.html), a single page with the
+full-day results, latency charts and a matching sandbox you can type orders into
+([open it in the browser](https://htmlpreview.github.io/?https://github.com/ArnavLifelessCoder/tachyon/blob/main/docs/demo/index.html)).
+
 ## Results
 
 All numbers are medians of at least five runs, with the range in brackets, from the

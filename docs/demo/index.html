@@ -537,14 +537,19 @@ flowchart LR
 })();
 </script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
 <script>
-  // Previewers may load the library after this runs, so wait for it.
-  (function draw(tries) {
-    if (!window.mermaid) { if (tries < 200) setTimeout(draw, 50, tries + 1); return; }
-    mermaid.initialize({ startOnLoad: false, theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" });
-    mermaid.run({ querySelector: "pre.mermaid" });
-  })(0);
+  // Load the diagram library at runtime: some HTML previewers only run inline scripts.
+  (function () {
+    const draw = () => {
+      mermaid.initialize({ startOnLoad: false, theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" });
+      mermaid.run({ querySelector: "pre.mermaid" });
+    };
+    if (window.mermaid) return draw();
+    const script = document.createElement("script");
+    script.src = "https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js";
+    script.onload = draw;
+    document.head.appendChild(script);
+  })();
 </script>
 </body>
 </html>

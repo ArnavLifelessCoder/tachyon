@@ -539,7 +539,9 @@ flowchart LR
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
 <script>
-  mermaid.initialize({ startOnLoad: true, theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" });
+  // Run explicitly: previewers that inject scripts after load miss startOnLoad.
+  mermaid.initialize({ startOnLoad: false, theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" });
+  mermaid.run({ querySelector: "pre.mermaid" });
 </script>
 </body>
 </html>

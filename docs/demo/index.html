@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Standalone copy of the project showcase. Every number is embedded from results/. -->
+<title>Tachyon Trading Core</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: one 1080px reading column of numbered-by-ITCH-type sections, a market-data sheet:
+   tables and ladders carry the page, green/red reserved for bids and asks. */
+:root {
+  --bg: #f3f6fa; --surface: #ffffff; --ink: #0e1a2b; --muted: #556579; --rule: #d6dde7;
+  --accent: #1d4ed0; --accent-soft: #e3eafc;
+  --bid: #0d7f57; --bid-soft: #dcf2e8; --ask: #bf3328; --ask-soft: #f9e1de; --warn: #9a6512; --warn-soft: #f6ead2;
+  --s1: #1d4ed0; --s2: #7c3aed; --s3: #0d7f57; --s4: #0e7490; --s5: #b45309; --s6: #be185d; --s7: #475569;
+  --display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0b111c; --surface: #111a29; --ink: #e5ecf6; --muted: #93a2b7; --rule: #233148;
+  --accent: #7ea3ff; --accent-soft: #1a2747;
+  --bid: #43cf96; --bid-soft: #12302a; --ask: #ff7d72; --ask-soft: #3a1c1d; --warn: #e5b452; --warn-soft: #3a2c12;
+  --s1: #7ea3ff; --s2: #b59bff; --s3: #43cf96; --s4: #4fc6dd; --s5: #f0a54a; --s6: #f47ab4; --s7: #a3b1c4;
+  color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0b111c; --surface: #111a29; --ink: #e5ecf6; --muted: #93a2b7; --rule: #233148;
+  --accent: #7ea3ff; --accent-soft: #1a2747;
+  --bid: #43cf96; --bid-soft: #12302a; --ask: #ff7d72; --ask-soft: #3a1c1d; --warn: #e5b452; --warn-soft: #3a2c12;
+  --s1: #7ea3ff; --s2: #b59bff; --s3: #43cf96; --s4: #4fc6dd; --s5: #f0a54a; --s6: #f47ab4; --s7: #a3b1c4;
+  color-scheme: dark;
+}
+
+body { background: var(--bg); color: var(--ink); font: 15px/1.6 var(--body); }
+.wrap { max-width: 1080px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 40px 64px; display: grid; gap: 72px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 600; letter-spacing: 0.01em; line-height: 1.05; margin: 0; text-wrap: balance; }
+h2 { font-size: clamp(30px, 4vw, 40px); }
+h3 { font-size: 22px; }
+p { margin: 0; max-width: 68ch; }
+a { color: var(--accent); }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.mono, .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+.label { font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+section { display: grid; gap: 22px; min-width: 0; }
+.sec-head { display: grid; gap: 10px; }
+.sec-head .tag { display: inline-flex; align-items: center; gap: 10px; }
+.type { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 5px; background: var(--ink); color: var(--bg); font: 500 14px/1 var(--mono); }
+
+/* hero */
+.hero { display: grid; gap: 22px; padding-top: 8px; }
+.hero h1 { font-size: clamp(60px, 11vw, 112px); font-weight: 700; letter-spacing: -0.01em; }
+.hero .lead { font-size: 18px; max-width: 64ch; }
+.tape { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 2px solid var(--ink); border-bottom: 1px solid var(--rule); }
+.tape > div { padding: 16px 16px 16px 0; display: grid; gap: 4px; align-content: start; min-width: 0; }
+.tape > div + div { padding-left: 16px; border-left: 1px solid var(--rule); }
+.tape .big { font: 600 clamp(26px, 3.4vw, 36px)/1.05 var(--display); font-variant-numeric: tabular-nums; }
+.tape .big.good { color: var(--bid); }
+@media (max-width: 760px) { .tape { grid-template-columns: repeat(2, minmax(0, 1fr)); } .tape > div:nth-child(3) { border-left: 0; padding-left: 0; } .tape > div:nth-child(n+3) { border-top: 1px solid var(--rule); } }
+
+/* halves */
+.halves { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; background: var(--surface); }
+.halves > div { padding: 24px; display: grid; gap: 12px; align-content: start; min-width: 0; }
+.halves > div + div { border-left: 1px solid var(--rule); }
+.halves ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+@media (max-width: 760px) { .halves { grid-template-columns: 1fr; } .halves > div + div { border-left: 0; border-top: 1px solid var(--rule); } }
+
+/* message mix */
+.mix { display: flex; height: 38px; border-radius: 6px; overflow: hidden; border: 1px solid var(--rule); }
+.mix span { display: block; min-width: 2px; }
+.legend { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px 20px; }
+.legend div { display: grid; grid-template-columns: 14px 1fr auto; gap: 8px; align-items: baseline; font-size: 14px; }
+.legend i { width: 12px; height: 12px; border-radius: 3px; align-self: center; }
+
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 9px 12px 9px 0; border-bottom: 1px solid var(--rule); vertical-align: baseline; }
+th { font: 500 12px/1.3 var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+td.num, th.num { text-align: right; padding-right: 0; padding-left: 12px; white-space: nowrap; }
+.pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font: 500 12px/1.6 var(--mono); white-space: nowrap; }
+.pill.met { background: var(--bid-soft); color: var(--bid); }
+.pill.miss { background: var(--ask-soft); color: var(--ask); }
+.pill.info { background: var(--accent-soft); color: var(--accent); }
+.pill.warn { background: var(--warn-soft); color: var(--warn); }
+
+.panel { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 20px; display: grid; gap: 16px; min-width: 0; }
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.tabs button, .btn { font: 500 13px/1 var(--body); padding: 9px 14px; border-radius: 6px; border: 1px solid var(--rule); background: var(--bg); color: var(--ink); cursor: pointer; }
+.tabs button[aria-selected="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.btn:hover, .tabs button:hover { border-color: var(--accent); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+svg text { fill: var(--muted); font: 11px var(--mono); }
+.chart { width: 100%; height: auto; display: block; }
+.note { font-size: 14px; color: var(--muted); max-width: 72ch; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 760px) { .two { grid-template-columns: 1fr; } }
+
+/* bars */
+.bars { display: grid; gap: 14px; }
+.bar-row { display: grid; grid-template-columns: 170px 1fr; gap: 14px; align-items: center; }
+.bar-row .tracks { display: grid; gap: 5px; min-width: 0; }
+.track { display: grid; grid-template-columns: 1fr 92px; gap: 8px; align-items: center; font-size: 13px; }
+.track b { display: block; height: 14px; border-radius: 3px; }
+.track .val { font-family: var(--mono); font-variant-numeric: tabular-nums; text-align: right; }
+@media (max-width: 560px) { .bar-row { grid-template-columns: 1fr; gap: 6px; } }
+
+/* sandbox */
+.sandbox { display: grid; grid-template-columns: 290px 1fr 1fr; gap: 20px; align-items: start; }
+@media (max-width: 900px) { .sandbox { grid-template-columns: 1fr; } }
+.form { display: grid; gap: 12px; }
+.form .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.form label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+.form input, .form select { font: 14px var(--mono); padding: 8px 10px; border-radius: 6px; border: 1px solid var(--rule); background: var(--bg); color: var(--ink); width: 100%; box-sizing: border-box; }
+.seg { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; }
+.seg button { border: 0; padding: 9px; font: 600 13px var(--body); background: var(--bg); color: var(--muted); cursor: pointer; }
+.seg button[aria-pressed="true"].buy { background: var(--bid); color: var(--surface); }
+.seg button[aria-pressed="true"].sell { background: var(--ask); color: var(--surface); }
+.ladder { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 13px; display: grid; }
+.ladder .lrow { display: grid; grid-template-columns: 1fr 80px 1fr; position: relative; padding: 4px 8px; }
+.ladder .lrow .bg { position: absolute; top: 2px; bottom: 2px; border-radius: 3px; }
+.ladder .ask .bg { right: 0; background: var(--ask-soft); }
+.ladder .bid .bg { left: 0; background: var(--bid-soft); }
+.ladder .lrow span { position: relative; }
+.ladder .price { text-align: center; font-weight: 500; }
+.ladder .ask .price { color: var(--ask); }
+.ladder .bid .price { color: var(--bid); }
+.ladder .spread { text-align: center; padding: 6px; color: var(--muted); font-size: 12px; border-block: 1px dashed var(--rule); }
+.log { font: 13px/1.5 var(--mono); max-height: 360px; overflow-y: auto; display: grid; gap: 2px; align-content: start; }
+.log div { display: grid; grid-template-columns: 74px 1fr; gap: 8px; padding: 3px 6px; border-radius: 4px; }
+.log .k { font-weight: 500; }
+.log .ev-trade .k { color: var(--accent); }
+.log .ev-ack .k { color: var(--muted); }
+.log .ev-cancelled .k { color: var(--warn); }
+.log .ev-rejected .k { color: var(--ask); }
+.log .ev-note { color: var(--muted); font-style: italic; }
+.log .req { color: var(--ink); background: var(--bg); margin-top: 6px; }
+.empty { color: var(--muted); font-size: 13px; padding: 8px; }
+
+.checks { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+.check { border-top: 2px solid var(--ink); padding-top: 12px; display: grid; gap: 6px; align-content: start; }
+.check .figure { font: 600 28px/1 var(--display); font-variant-numeric: tabular-nums; }
+.limits { margin: 0; padding-left: 18px; display: grid; gap: 8px; max-width: 76ch; }
+footer { border-top: 1px solid var(--rule); padding-top: 18px; display: grid; gap: 6px; font-size: 13px; color: var(--muted); }
+pre.mermaid { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 16px; margin: 0; overflow-x: auto; }
+@media (prefers-reduced-motion: no-preference) { .mix span, .track b, .ladder .bg { transition: width .35s ease; } }
+</style>
+<style>body { margin: 0; } img { max-width: 100%; } [hidden] { display: none !important; }</style>
+</head>
+<body>
+
+
+<div class="wrap">
+
+<header class="hero">
+  <div class="label">NASDAQ TotalView-ITCH 5.0 &middot; trading day of 30 January 2019</div>
+  <h1>Tachyon</h1>
+  <p class="lead">A C++20 trading core in two halves: a feed handler that rebuilds every symbol's limit order book from a full day of NASDAQ's binary feed, and a price-time matching engine that decides trades itself. Lock-free threads, zero allocation on the hot path, and every claim on this page traced to a result file.</p>
+  <div class="tape" id="tape"></div>
+</header>
+
+<section aria-labelledby="h-halves">
+  <div class="sec-head"><div class="tag"><span class="type">R</span><span class="label">Two jobs that look alike</span></div><h2 id="h-halves">Rebuilding a book is not matching one</h2></div>
+  <div class="halves">
+    <div>
+      <div class="label">Feed handler &middot; book builder</div>
+      <h3>Rebuild what the exchange published</h3>
+      <p>ITCH is NASDAQ's output. Every execution in it already happened at the exchange, so replaying it only removes the shares the feed says were filled. Nothing is matched.</p>
+      <ul>
+        <li>Zero-copy decode of 10 message types from a memory-mapped file</li>
+        <li>One book per stock locate, 65,536 slots</li>
+        <li><span class="mono">U</span> replace: delete the old id, add the new one, keep side and symbol</li>
+      </ul>
+    </div>
+    <div>
+      <div class="label">Matching engine</div>
+      <h3>Decide the trades</h3>
+      <p>The engine accepts orders and produces trades with price-time priority. It reuses the book builder's pooled orders, level FIFOs and id map.</p>
+      <ul>
+        <li>Limit, market and IOC orders; cancel; modify</li>
+        <li>Shrinking an order keeps its place; any other change loses it</li>
+        <li>Ack, Trade, Cancelled and Rejected events, in order</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="h-day">
+  <div class="sec-head"><div class="tag"><span class="type">A</span><span class="label">The full day</span></div><h2 id="h-day">368 million messages, every book empty at the close</h2></div>
+  <p>The replay rebuilt books for <span class="num" id="books"></span> symbols with no reference to an unknown order. The message mix is dominated by adds and deletes, the churn the order pool and id map are built for.</p>
+  <div class="mix" id="mix" role="img" aria-label="Share of each ITCH message type over the day"></div>
+  <div class="legend" id="legend"></div>
+  <div class="panel">
+    <div class="sec-head"><h3>Every crossed book had a reason</h3><p class="note">A correct rebuild of NASDAQ's own book should never cross during continuous trading. Across the day the book crossed or locked in 8 episodes, all while the symbol was paused (limit-up/limit-down) or quoting only, according to its ITCH trading-action messages.</p></div>
+    <svg class="chart" id="episodes" viewBox="0 0 960 150" role="img" aria-label="Crossed-book episodes between 07:00 and 12:00"></svg>
+    <div class="scroll"><table id="episode-table"><thead><tr><th>Symbol</th><th>Start</th><th>End</th><th>Trading state</th><th class="num">Messages</th></tr></thead><tbody></tbody></table></div>
+  </div>
+</section>
+
+<section aria-labelledby="h-arch">
+  <div class="sec-head"><div class="tag"><span class="type">F</span><span class="label">Architecture</span></div><h2 id="h-arch">Three pinned threads, two lock-free rings</h2></div>
+  <pre class="mermaid">
+flowchart LR
+  F["ITCH file (memory-mapped)"] --> P["Parser thread: zero-copy decode"]
+  P -- "SPSC ring, rdtsc at parse" --> B["Book thread: one book per symbol"]
+  B -- "SPSC ring, rdtsc at update" --> U["Publisher thread: BBO, trades, latency"]
+  subgraph Shared["Shared structures"]
+    OP["Order pool, free list"]
+    L["Price levels: intrusive FIFO, sorted vector"]
+    M["Order id map: open addressing"]
+  end
+  B --- Shared
+  E["Matching engine"] --- Shared
+  PY["me_py bindings, backtest"] --> B
+  PY --> E
+  </pre>
+  <p class="note">The rings use release stores and acquire loads on head and tail, each on its own 64-byte line, with each side caching the other's index. The threaded pipeline produced the same books as a single-threaded run at <span class="num" id="ck"></span> mid-day checkpoints and the same <span class="num" id="bbo"></span> best-price changes in the same order. Both ThreadSanitizer jobs in CI pass.</p>
+</section>
+
+<section aria-labelledby="h-perf">
+  <div class="sec-head"><div class="tag"><span class="type">E</span><span class="label">Measured, five runs each</span></div><h2 id="h-perf">Performance, including the misses</h2></div>
+  <div class="scroll"><table id="perf"><thead><tr><th>Benchmark</th><th class="num">Median</th><th class="num">Range of 5 runs</th><th>Target</th></tr></thead><tbody></tbody></table></div>
+  <div class="panel">
+    <div class="tabs" role="tablist" aria-label="Latency distributions">
+      <button role="tab" id="tab-ops" aria-selected="true" data-chart="ops">Book update by message</button>
+      <button role="tab" id="tab-pipe" aria-selected="false" data-chart="pipe">Pipeline</button>
+      <button role="tab" id="tab-match" aria-selected="false" data-chart="match">Matching engine</button>
+    </div>
+    <svg class="chart" id="cdf" viewBox="0 0 960 360" role="img" aria-label="Latency cumulative distribution"></svg>
+    <div class="scroll"><table id="cdf-table"></table></div>
+    <p class="note" id="cdf-note"></p>
+  </div>
+</section>
+
+<section aria-labelledby="h-parts">
+  <div class="sec-head"><div class="tag"><span class="type">X</span><span class="label">Design choices, measured</span></div><h2 id="h-parts">Why each structure is the one it is</h2></div>
+  <div class="two">
+    <div class="panel"><h3>Order id map vs <span class="mono">std::unordered_map</span></h3><div class="bars" id="map-bars"></div><p class="note">Open addressing keeps a lookup in one or two adjacent slots, and backward-shift deletion means a day of deletes leaves no tombstones. Both maps were reserved for one million ids before timing.</p></div>
+    <div class="panel"><h3>Price levels and ring padding</h3><div class="bars" id="other-bars"></div><p class="note">Ring padding only paid off with the consumer on the CPU's other 8-core die. Two padded cross-die runs took about 1.3 s, probably a parked core waking; they are kept in the data.</p></div>
+  </div>
+</section>
+
+<section aria-labelledby="h-sandbox">
+  <div class="sec-head"><div class="tag"><span class="type">U</span><span class="label">Try the matching rules</span></div><h2 id="h-sandbox">Matching sandbox</h2><p class="note">A browser port of <span class="mono">python/ref_matcher.py</span>, the reference the C++ engine matched event for event on 1,000 random streams. It loads with a small example book. Prices are in cents.</p></div>
+  <div class="sandbox panel">
+    <form class="form" id="order-form" autocomplete="off">
+      <div class="seg" role="group" aria-label="Side"><button type="button" class="buy" id="side-buy" aria-pressed="true">Buy</button><button type="button" class="sell" id="side-sell" aria-pressed="false">Sell</button></div>
+      <div class="row">
+        <label for="otype">Type<select id="otype"><option value="L">Limit</option><option value="I">IOC</option><option value="M">Market</option></select></label>
+        <label for="oid">Order id<input id="oid" type="number" min="1" step="1"></label>
+      </div>
+      <div class="row">
+        <label for="oprice">Price<input id="oprice" type="number" min="0" step="1" value="10001"></label>
+        <label for="oqty">Quantity<input id="oqty" type="number" min="0" step="1" value="150"></label>
+      </div>
+      <button class="btn primary" type="submit" id="submit-order">Submit order</button>
+      <div class="row">
+        <label for="cid">Cancel id<input id="cid" type="number" min="1" step="1" placeholder="e.g. 3"></label>
+        <button class="btn" type="button" id="cancel-btn" style="align-self:end">Cancel</button>
+      </div>
+      <div class="row">
+        <label for="mid">Modify id<input id="mid" type="number" min="1" step="1" placeholder="e.g. 4"></label>
+        <label for="mqty">New qty<input id="mqty" type="number" min="0" step="1" placeholder="e.g. 50"></label>
+      </div>
+      <div class="row">
+        <label for="mprice">New price<input id="mprice" type="number" min="0" step="1" placeholder="e.g. 10002"></label>
+        <button class="btn" type="button" id="modify-btn" style="align-self:end">Modify</button>
+      </div>
+      <button class="btn" type="button" id="reset-btn">Reset to example book</button>
+    </form>
+    <div><div class="label" style="margin-bottom:8px">Book (price, open shares, orders)</div><div class="ladder" id="ladder"></div></div>
+    <div><div class="label" style="margin-bottom:8px">Events, newest last</div><div class="log" id="log" aria-live="polite"></div></div>
+  </div>
+</section>
+
+<section aria-labelledby="h-tests">
+  <div class="sec-head"><div class="tag"><span class="type">C</span><span class="label">How it is checked</span></div><h2 id="h-tests">Slow references, compared event by event</h2></div>
+  <div class="checks">
+    <div class="check"><div class="figure">10,000</div><div class="label">random streams</div><p>The fast book against a <span class="mono">std::map</span> / <span class="mono">std::list</span> reference. Top 5 levels compared after every event, full books every 64.</p></div>
+    <div class="check"><div class="figure">1,000</div><div class="label">order streams</div><p>The matching engine against a Python matcher that re-sorts a flat list every time. Every ack, trade, cancel and reject must match.</p></div>
+    <div class="check"><div class="figure">10,000</div><div class="label">mutated feeds</div><p>The parser fuzzed with bit flips, broken length prefixes, truncation and inserted bytes in exact-size buffers under AddressSanitizer.</p></div>
+    <div class="check"><div class="figure">0</div><div class="label">heap allocations</div><p>Book and engine replay after a warm-up pass with a counting <span class="mono">operator new</span>. The hot path never allocates.</p></div>
+    <div class="check"><div class="figure">100M</div><div class="label">ring items</div><p>Two threads through the SPSC ring, every item checked for order and loss, under ThreadSanitizer with GCC and Clang.</p></div>
+    <div class="check"><div class="figure">9 / 9</div><div class="label">CI jobs green</div><p>Debug and ASan on Windows (MSVC) and Linux (GCC, Clang), TSan, formatting and lint on every push.</p></div>
+  </div>
+</section>
+
+<section aria-labelledby="h-limits">
+  <div class="sec-head"><div class="tag"><span class="type">D</span><span class="label">Limits</span></div><h2 id="h-limits">What this does not show</h2></div>
+  <ul class="limits">
+    <li>One trading day and one machine: a laptop with no isolated cores, turbo on and core parking enabled, so tail latency is worse than on a tuned server.</li>
+    <li>Book updates miss the 100 ns median target. A full day keeps up to <span class="num" id="peak"></span> orders live, which does not fit in cache. Hardware counters were not available on Windows, so that explanation is an inference.</li>
+    <li>Timestamps come from <span class="mono">rdtsc</span>, which advances in roughly 10 ns steps on this CPU.</li>
+    <li>The engine handles one symbol, with no self-trade prevention, auctions or risk checks.</li>
+    <li>The backtest demo (<span class="num" id="bt-fills"></span> fills, <span class="num" id="bt-pnl"></span> marked to mid) ignores queue position. It demonstrates the bindings and says nothing about any strategy.</li>
+  </ul>
+</section>
+
+<footer>
+  <div id="machine"></div>
+  <div>Source and every result file: <a href="https://github.com/ArnavLifelessCoder/tachyon" target="_blank" rel="noopener">github.com/ArnavLifelessCoder/tachyon</a> (<span class="mono">results/m3</span> to <span class="mono">results/m7</span>).</div>
+</footer>
+</div>
+
+<script id="data" type="application/json">{"day":{"messages":368366634,"counts":{"A":162970455,"B":116,"C":158886,"D":158273361,"E":8096995,"F":1725898,"H":8805,"I":3684511,"J":62,"L":193769,"P":1326184,"Q":17430,"R":8714,"S":6,"U":27222746,"V":1,"X":4669874,"Y":8821},"adds":164696353,"executes":8255881,"cancels":4669874,"deletes":158273361,"replaces":27222746,"trades":1326184,"unknown_refs":0,"duplicate_adds":0,"locate_mismatches":0,"over_executions":0,"crossed_events":598,"locked_events":65,"crossed_episodes":8,"books":8695,"peak_live_orders":1742866,"live_orders_at_end":0,"crossed_or_locked_events_by_hour":[0,0,0,0,0,0,0,8,0,14,329,312,0,0,0,0,0,0,0,0,0,0,0,0],"crossed_episodes_detail":[{"symbol":"EYEN","start":"07:27:31","end":"07:27:33","symbol_messages":2,"trading_state_at_start":"Q"},{"symbol":"EYEN","start":"07:27:52","end":"07:29:02","symbol_messages":6,"trading_state_at_start":"Q"},{"symbol":"DLPN","start":"09:46:52","end":"09:47:07","symbol_messages":12,"trading_state_at_start":"P"},{"symbol":"DLPN","start":"09:50:24","end":"09:50:27","symbol_messages":2,"trading_state_at_start":"P"},{"symbol":"PHUN","start":"10:09:06","end":"10:09:21","symbol_messages":2,"trading_state_at_start":"P"},{"symbol":"PHUN","start":"10:10:19","end":"10:18:58","symbol_messages":22,"trading_state_at_start":"P"},{"symbol":"SXTC","start":"10:27:49","end":"10:32:49","symbol_messages":305,"trading_state_at_start":"P"},{"symbol":"SXTC","start":"11:44:22","end":"11:49:22","symbol_messages":312,"trading_state_at_start":"P"}]},"pipeline_check":{"books_identical":true,"bbo_identical":true,"checkpoints":14,"bbo_changes":174890436,"updates":364444399},"throughput":{"parse_throughput":{"median":15805700.0,"min":14539900.0,"max":16268700.0,"runs":[14837500.0,14539900.0,15860700.0,16268700.0,15805700.0]},"parse_prefix_throughput":{"median":30453200.0,"min":26069600.0,"max":49373400.0,"runs":[49373400.0,32071400.0,26069600.0,30453200.0,29097100.0]},"book_throughput":{"median":3074180.0,"min":2785600.0,"max":3134920.0,"runs":[3074180.0,3134920.0,2785600.0,3095120.0,2908170.0]}},"ops":{"A":{"count":162970455,"p50":191,"p90":311,"p99":575,"p999":2431,"max":10547071,"cdf":[[10,5.5e-05],[40,0.037575],[80,0.160816],[110,0.213817],[151,0.275309],[191,0.538731],[221,0.692903],[263,0.818288],[303,0.88899],[331,0.922154],[371,0.949556],[411,0.965776],[443,0.973706],[483,0.981185],[527,0.986153],[551,0.9887],[591,0.991122],[631,0.992801],[663,0.993705],[703,0.994594],[743,0.995238],[775,0.99561],[815,0.995996],[855,0.9963],[887,0.996483],[927,0.996682],[967,0.996848],[991,0.996953],[1039,0.997076],[1103,0.997256],[1151,0.99734],[1215,0.997466],[1279,0.997558],[1327,0.997626],[1391,0.997701],[1455,0.997777],[1503,0.997827],[1567,0.997888],[1631,0.998001],[1679,0.998107],[1743,0.998218],[1807,0.998297],[1855,0.998369],[1919,0.998481],[1983,0.998611],[2031,0.998673],[2143,0.998803],[2271,0.998905],[2367,0.998967],[2495,0.999036],[2623,0.999089],[2719,0.999129],[2847,0.999174],[2975,0.999212],[3071,0.999239],[3199,0.999273],[3327,0.999306],[3423,0.999328],[3551,0.999355],[3679,0.999379],[3775,0.999396],[3903,0.99942],[4031,0.99944],[4159,0.999458],[4415,0.999493],[4671,0.99953],[4863,0.999553],[5119,0.999579],[5375,0.999601],[5567,0.999613],[5823,0.999628],[6079,0.999642],[6271,0.999651],[6527,0.999662],[6783,0.999678],[6975,0.999689],[7231,0.9997],[7487,0.999708],[7679,0.999713],[7935,0.99972],[8191,0.999726],[8575,0.999734],[9087,0.999752],[9599,0.99977],[9983,0.999782],[10495,0.999796],[11007,0.999808],[11391,0.999818],[11903,0.999828],[12415,0.999838],[12799,0.999846],[13311,0.999856],[13823,0.999866],[14207,0.999872],[14719,0.999879],[15231,0.999885],[15615,0.999889],[16127,0.999894],[16895,0.9999],[17663,0.999905],[18687,0.99991],[19711,0.999916],[20479,0.999922],[21503,0.99993],[22527,0.999936],[23295,0.99994],[24319,0.999945],[25343,0.99995],[26111,0.999953],[27135,0.999956],[28159,0.999959],[28927,0.999961],[29951,0.999963],[30719,0.999965],[31743,0.999966],[32767,0.999968],[34303,0.99997],[36351,0.999972],[38399,0.999974],[39935,0.999975],[41983,0.999976],[44031,0.999977],[45567,0.999978],[47615,0.999979],[49663,0.99998],[51199,0.99998],[53247,0.999981],[55295,0.999981],[56831,0.999982],[58879,0.999982],[60927,0.999982],[62463,0.999983],[64511,0.999983],[67583,0.999984],[70655,0.999984],[74751,0.999985],[78847,0.999986],[81919,0.999987],[86015,0.999987],[90111,0.999988],[93183,0.999989],[97279,0.999989],[101375,0.99999],[104447,0.99999],[108543,0.999991],[112639,0.999991],[115711,0.999992],[119807,0.999992],[123903,0.999993],[126975,0.999993],[131071,0.999993],[139263,0.999994],[145407,0.999994],[153599,0.999995],[161791,0.999995],[167935,0.999995],[176127,0.999995],[184319,0.999996],[190463,0.999996],[198655,0.999996],[206847,0.999996],[215039,0.999996],[223231,0.999996],[231423,0.999996],[237567,0.999996],[245759,0.999997],[253951,0.999997],[260095,0.999997],[274431,0.999997],[290815,0.999997],[303103,0.999997],[319487,0.999997],[335871,0.999997],[348159,0.999997],[368639,0.999997],[385023,0.999997],[397311,0.999997],[417791,0.999998],[434175,0.999998],[446463,0.999998],[462847,0.999998],[479231,0.999998],[491519,0.999998],[507903,0.999998],[524287,0.999998],[548863,0.999998],[589823,0.999998],[622591,0.999998],[647167,0.999998],[679935,0.999999],[712703,0.999999],[737279,0.999999],[770047,0.999999],[819199,0.999999],[843775,0.999999],[884735,0.999999],[917503,0.999999],[958463,0.999999],[1007615,0.999999],[1048575,0.999999],[1097727,0.999999],[1163263,0.999999],[1228799,0.999999],[1277951,0.999999],[1343487,1.0],[1409023,1.0],[1490943,1.0],[1589247,1.0],[1654783,1.0],[1720319,1.0],[1867775,1.0],[2015231,1.0],[2097151,1.0],[2293759,1.0],[2555903,1.0],[2752511,1.0],[3014655,1.0],[3047423,1.0],[3145727,1.0],[3276799,1.0],[3407871,1.0],[3473407,1.0],[3571711,1.0],[3670015,1.0],[3768319,1.0],[4030463,1.0],[4390911,1.0],[4915199,1.0],[5046271,1.0],[5177343,1.0],[10616831,1.0]]},"F":{"count":1725898,"p50":241,"p90":511,"p99":1471,"p999":6335,"max":1329142,"cdf":[[10,2e-06],[30,0.001356],[60,0.030207],[80,0.058751],[110,0.086172],[131,0.098977],[161,0.148871],[191,0.31573],[211,0.407326],[241,0.522198],[263,0.583696],[291,0.657535],[311,0.697133],[343,0.746023],[371,0.785837],[391,0.808636],[423,0.838351],[443,0.855542],[471,0.877927],[491,0.890531],[527,0.906724],[551,0.920078],[575,0.927552],[607,0.937034],[623,0.942304],[655,0.948978],[687,0.954403],[703,0.957485],[735,0.961575],[751,0.963854],[783,0.966934],[807,0.968702],[831,0.971037],[863,0.973135],[887,0.974414],[911,0.976061],[935,0.977069],[967,0.978409],[983,0.979217],[1015,0.980322],[1055,0.98161],[1087,0.982458],[1135,0.983646],[1167,0.984312],[1215,0.985288],[1247,0.985781],[1295,0.98659],[1343,0.987317],[1375,0.987739],[1423,0.988352],[1455,0.988714],[1503,0.989246],[1551,0.989655],[1583,0.99003],[1631,0.990393],[1663,0.990727],[1711,0.991023],[1743,0.991293],[1791,0.991575],[1839,0.991886],[1871,0.992082],[1919,0.99238],[1951,0.992568],[1999,0.992821],[2031,0.992967],[2111,0.993341],[2207,0.993718],[2271,0.993919],[2367,0.994201],[2431,0.994348],[2527,0.994588],[2591,0.994742],[2687,0.995023],[2783,0.995244],[2847,0.995418],[2943,0.99559],[3007,0.995728],[3103,0.995905],[3199,0.996141],[3263,0.996245],[3359,0.996402],[3423,0.996475],[3519,0.996592],[3583,0.996666],[3679,0.996816],[3775,0.99693],[3839,0.997018],[3935,0.997115],[3999,0.997196],[4095,0.997298],[4223,0.997444],[4415,0.997609],[4607,0.997752],[4735,0.997872],[4927,0.998031],[5055,0.998134],[5247,0.99827],[5375,0.998341],[5567,0.998429],[5759,0.998503],[5887,0.998547],[6079,0.998605],[6207,0.998656],[6399,0.998723],[6591,0.998799],[6719,0.998853],[6911,0.998905],[7039,0.998943],[7231,0.998991],[7359,0.999025],[7551,0.999066],[7743,0.999105],[7871,0.999136],[8063,0.99917],[8191,0.999191],[8575,0.999246],[8831,0.999274],[9215,0.999326],[9599,0.999358],[9855,0.999377],[10239,0.9994],[10495,0.999417],[10879,0.999438],[11263,0.999457],[11519,0.999467],[11903,0.999479],[12159,0.999487],[12543,0.999499],[12799,0.999513],[13183,0.999524],[13567,0.999543],[13823,0.999554],[14207,0.999568],[14463,0.999576],[14847,0.999587],[15103,0.999592],[15487,0.999603],[15871,0.999616],[16127,0.999623],[16639,0.999631],[17151,0.999639],[17919,0.999652],[18431,0.99966],[19199,0.999677],[19967,0.999687],[20479,0.999696],[21247,0.999707],[21759,0.999717],[22527,0.999728],[23295,0.999739],[23807,0.99975],[24575,0.999766],[25087,0.999775],[25855,0.999783],[26367,0.999793],[27135,0.999802],[27903,0.999812],[28415,0.999817],[29183,0.999823],[29695,0.999829],[30463,0.999833],[30975,0.999835],[31743,0.999838],[32511,0.999843],[33279,0.99985],[34815,0.999853],[35839,0.999857],[37887,0.999863],[38911,0.999866],[40447,0.999869],[41983,0.999873],[44031,0.999876],[45567,0.999878],[46591,0.999879],[49151,0.999883],[50687,0.999885],[51711,0.999887],[53247,0.99989],[54271,0.999892],[57343,0.999893],[58879,0.999895],[60927,0.999897],[62975,0.999899],[64511,0.9999],[69631,0.999902],[71679,0.999903],[77823,0.999908],[80895,0.99991],[86015,0.999914],[89087,0.999918],[92159,0.999919],[97279,0.999923],[99327,0.999925],[102399,0.999928],[106495,0.999929],[110591,0.999933],[113663,0.999936],[115711,0.999939],[118783,0.999947],[121855,0.999952],[124927,0.999957],[127999,0.999963],[133119,0.999966],[139263,0.999969],[143359,0.999973],[149503,0.999976],[153599,0.999979],[159743,0.999981],[174079,0.999983],[180223,0.999984],[194559,0.999986],[208895,0.999987],[221183,0.999988],[231423,0.99999],[253951,0.999991],[258047,0.999992],[260095,0.999992],[266239,0.999993],[315391,0.999994],[430079,0.999994],[503807,0.999995],[507903,0.999995],[606207,0.999996],[688127,0.999997],[696319,0.999997],[704511,0.999998],[770047,0.999998],[909311,0.999999],[950271,0.999999],[1310719,1.0]]},"E":{"count":8096995,"p50":191,"p90":363,"p99":527,"p999":855,"max":3808328,"cdf":[[10,0.00106],[30,0.032568],[50,0.116316],[80,0.22716],[100,0.276822],[131,0.328912],[151,0.372834],[181,0.480565],[201,0.548034],[231,0.623011],[251,0.665999],[283,0.73502],[303,0.784052],[331,0.849992],[351,0.885364],[371,0.913363],[403,0.941818],[423,0.955452],[451,0.971844],[471,0.979817],[503,0.987564],[527,0.990748],[551,0.993799],[575,0.995169],[607,0.996553],[623,0.997172],[655,0.99776],[671,0.998021],[695,0.998223],[727,0.998448],[743,0.998557],[775,0.998688],[791,0.998752],[823,0.998829],[847,0.998871],[871,0.998924],[895,0.998954],[927,0.998989],[943,0.99901],[975,0.999034],[991,0.999046],[1023,0.999066],[1055,0.99908],[1087,0.999094],[1135,0.999114],[1167,0.999123],[1215,0.999139],[1247,0.999147],[1295,0.999156],[1327,0.999161],[1375,0.999167],[1407,0.999171],[1455,0.999178],[1487,0.999183],[1535,0.999197],[1567,0.99921],[1599,0.999225],[1647,0.999257],[1679,0.999276],[1727,0.999315],[1759,0.99934],[1807,0.999381],[1839,0.999406],[1887,0.999451],[1919,0.999478],[1967,0.999519],[1999,0.999544],[2047,0.999585],[2111,0.999625],[2175,0.99966],[2271,0.999688],[2335,0.999702],[2431,0.999712],[2495,0.99972],[2591,0.999725],[2655,0.999729],[2751,0.999733],[2815,0.999737],[2911,0.99974],[2975,0.999742],[3071,0.999743],[3135,0.999745],[3231,0.999747],[3295,0.999748],[3359,0.99975],[3455,0.999751],[3519,0.999752],[3615,0.999753],[3679,0.999755],[3775,0.999757],[3839,0.999757],[3967,0.999759],[4031,0.999759],[4223,0.999761],[4351,0.999762],[4543,0.999762],[4735,0.999763],[4863,0.999763],[5055,0.999764],[5247,0.999764],[5759,0.999765],[6143,0.999765],[6335,0.999765],[6463,0.999766],[6655,0.99977],[6783,0.999775],[6975,0.99978],[7103,0.999784],[7295,0.999787],[7423,0.999788],[7615,0.999791],[7743,0.999792],[7871,0.999794],[8063,0.999796],[8191,0.999797],[8575,0.999802],[8831,0.999806],[9215,0.999815],[9471,0.999823],[9855,0.99983],[10111,0.999837],[10495,0.999844],[10751,0.999849],[11135,0.999855],[11391,0.999861],[11647,0.999866],[12031,0.999872],[12287,0.999877],[12671,0.999882],[12927,0.999886],[13311,0.999892],[13567,0.999897],[13951,0.999903],[14207,0.999906],[14591,0.999909],[14847,0.999911],[15231,0.999914],[15487,0.999917],[15743,0.999919],[16127,0.999922],[16383,0.999923],[17151,0.999926],[17663,0.999928],[18431,0.999931],[18943,0.999932],[19711,0.999935],[20223,0.999938],[20991,0.999942],[21503,0.999944],[22271,0.999947],[22783,0.999949],[23551,0.999952],[24063,0.999954],[24575,0.999956],[25343,0.999958],[25855,0.99996],[26623,0.999963],[27135,0.999964],[27903,0.999966],[28415,0.999967],[29183,0.999968],[29695,0.999969],[30463,0.999971],[30975,0.999971],[31743,0.999972],[32255,0.999972],[32767,0.999973],[34303,0.999975],[35327,0.999976],[36863,0.999977],[38399,0.999977],[39935,0.999978],[40959,0.999978],[42495,0.999979],[44031,0.999979],[45567,0.99998],[46591,0.99998],[48127,0.999981],[49151,0.999981],[50687,0.999982],[53247,0.999982],[55807,0.999983],[58879,0.999983],[60927,0.999984],[62975,0.999984],[65535,0.999984],[68607,0.999985],[70655,0.999986],[75775,0.999986],[77823,0.999987],[81919,0.999987],[87039,0.999988],[91135,0.999989],[93183,0.99999],[96255,0.99999],[99327,0.999991],[101375,0.999991],[107519,0.999992],[110591,0.999992],[113663,0.999992],[115711,0.999993],[118783,0.999993],[122879,0.999994],[129023,0.999994],[133119,0.999995],[147455,0.999995],[157695,0.999995],[172031,0.999996],[178175,0.999996],[194559,0.999996],[237567,0.999997],[262143,0.999997],[323583,0.999998],[339967,0.999998],[413695,0.999998],[421887,0.999998],[454655,0.999998],[462847,0.999999],[475135,0.999999],[483327,0.999999],[663551,0.999999],[696319,0.999999],[770047,0.999999],[778239,0.999999],[794623,1.0],[884735,1.0],[991231,1.0],[1310719,1.0],[2850815,1.0]]},"C":{"count":158886,"p50":100,"p90":303,"p99":471,"p999":703,"max":723384,"cdf":[[10,0.005312],[20,0.030808],[30,0.084142],[40,0.154973],[50,0.236119],[60,0.310927],[70,0.376673],[80,0.432732],[90,0.479866],[100,0.518447],[110,0.553875],[120,0.587062],[131,0.619513],[141,0.650271],[151,0.677807],[161,0.703045],[171,0.726949],[181,0.750526],[191,0.773045],[201,0.794696],[211,0.813929],[221,0.830879],[231,0.846311],[241,0.859144],[251,0.870007],[263,0.880052],[271,0.890657],[283,0.901414],[291,0.911893],[303,0.922328],[311,0.931253],[323,0.939391],[331,0.946339],[343,0.952488],[351,0.95836],[363,0.963817],[371,0.968499],[383,0.972213],[391,0.975152],[403,0.97833],[411,0.980911],[423,0.983221],[431,0.985405],[443,0.987242],[451,0.988797],[463,0.990251],[471,0.991636],[483,0.992781],[491,0.993832],[503,0.994531],[511,0.995355],[527,0.995978],[535,0.9964],[543,0.996872],[551,0.99725],[567,0.997533],[575,0.997785],[583,0.997973],[591,0.998187],[607,0.998332],[615,0.998521],[623,0.99859],[631,0.998729],[647,0.998836],[655,0.99888],[663,0.99893],[671,0.998974],[687,0.999087],[695,0.999138],[703,0.999169],[711,0.999188],[727,0.999226],[735,0.999251],[743,0.99927],[751,0.999276],[767,0.999314],[775,0.999352],[783,0.999383],[807,0.999396],[815,0.999408],[823,0.999427],[831,0.999446],[847,0.999452],[855,0.999471],[863,0.999484],[871,0.99949],[887,0.999509],[895,0.999528],[903,0.999534],[911,0.999553],[927,0.999559],[943,0.999566],[951,0.999572],[967,0.999585],[975,0.999597],[991,0.999603],[1015,0.999616],[1039,0.999622],[1087,0.999635],[1103,0.999641],[1151,0.999654],[1167,0.99966],[1215,0.999673],[1263,0.999679],[1295,0.999685],[1343,0.999692],[1407,0.999698],[1439,0.999704],[1487,0.99971],[1567,0.999717],[1663,0.999723],[1679,0.999729],[1743,0.999736],[1775,0.999748],[1807,0.999755],[1823,0.999761],[1855,0.99978],[1887,0.999792],[1903,0.999805],[1919,0.999811],[1967,0.999817],[1983,0.999824],[2047,0.99983],[2079,0.999836],[2175,0.999843],[2303,0.999849],[2335,0.999855],[2399,0.999862],[2559,0.999868],[2815,0.999874],[3359,0.99988],[7103,0.999887],[7743,0.999893],[8319,0.999899],[8959,0.999906],[9087,0.999912],[9727,0.999918],[10367,0.999924],[11135,0.999931],[12415,0.999937],[12671,0.999943],[16895,0.99995],[18431,0.999956],[22527,0.999962],[25343,0.999969],[27903,0.999975],[28159,0.999981],[37887,0.999987],[266239,0.999994],[884735,1.0]]},"X":{"count":4669874,"p50":110,"p90":291,"p99":423,"p999":607,"max":4682607,"cdf":[[10,0.027122],[30,0.217302],[50,0.328188],[70,0.375737],[90,0.431646],[110,0.507588],[131,0.59428],[161,0.667594],[181,0.702454],[201,0.750703],[221,0.800853],[241,0.830889],[263,0.853599],[283,0.886923],[311,0.93962],[331,0.959433],[351,0.9708],[371,0.978393],[391,0.984214],[411,0.988881],[431,0.992484],[463,0.995851],[483,0.99703],[503,0.997663],[527,0.998046],[543,0.99831],[567,0.998488],[583,0.998621],[615,0.998759],[631,0.998823],[655,0.998875],[671,0.998919],[695,0.998958],[711,0.998991],[735,0.99902],[767,0.999059],[783,0.999078],[807,0.999097],[823,0.999115],[847,0.999129],[863,0.999143],[887,0.999156],[911,0.999172],[935,0.999183],[951,0.99919],[975,0.999197],[991,0.999202],[1015,0.999207],[1039,0.999213],[1087,0.999228],[1119,0.999234],[1151,0.99924],[1183,0.999247],[1215,0.99925],[1247,0.999255],[1295,0.99926],[1327,0.999261],[1359,0.999263],[1391,0.999265],[1423,0.999268],[1455,0.99927],[1487,0.999276],[1535,0.999294],[1567,0.99931],[1599,0.99933],[1631,0.999353],[1663,0.999381],[1695,0.999403],[1727,0.999426],[1775,0.999472],[1807,0.9995],[1839,0.99953],[1871,0.999561],[1903,0.999597],[1935,0.99962],[1967,0.999638],[2015,0.999677],[2047,0.999694],[2111,0.999718],[2175,0.999739],[2239,0.99975],[2303,0.999757],[2367,0.999762],[2463,0.999766],[2527,0.999768],[2591,0.99977],[2655,0.999772],[2719,0.999773],[2783,0.999775],[2847,0.999776],[2943,0.999777],[3007,0.999779],[3071,0.99978],[3135,0.999782],[3199,0.999782],[3263,0.999783],[3327,0.999784],[3455,0.999786],[3519,0.999786],[3583,0.999787],[3647,0.999788],[3711,0.999789],[3807,0.999791],[3903,0.999792],[4095,0.999792],[4223,0.999794],[4863,0.999794],[5119,0.999795],[5567,0.999795],[6207,0.999796],[6463,0.999797],[6591,0.999798],[6719,0.999803],[6847,0.999806],[6975,0.999809],[7103,0.999811],[7231,0.999813],[7423,0.999815],[7551,0.999816],[7679,0.999817],[7807,0.999818],[7935,0.99982],[8127,0.999821],[8319,0.999823],[8703,0.999829],[8959,0.999834],[9215,0.999842],[9471,0.999849],[9727,0.999853],[9983,0.999859],[10239,0.999862],[10623,0.999866],[10879,0.999869],[11135,0.999872],[11391,0.999875],[11647,0.999879],[11903,0.999885],[12159,0.999887],[12543,0.999891],[12799,0.999896],[13055,0.999901],[13311,0.999903],[13567,0.999905],[13823,0.999908],[14079,0.999912],[14463,0.999916],[14719,0.99992],[14975,0.999921],[15231,0.999923],[15487,0.999925],[15743,0.999927],[15999,0.999928],[16383,0.99993],[16895,0.999932],[17407,0.999934],[17919,0.999936],[18431,0.999939],[18943,0.999939],[19455,0.999942],[20223,0.999944],[20735,0.999946],[21247,0.99995],[21759,0.999954],[22271,0.999955],[23039,0.999957],[23807,0.999958],[24319,0.999959],[24831,0.999961],[25343,0.999963],[25855,0.999965],[26623,0.999966],[27135,0.999967],[27903,0.999968],[28415,0.999969],[29439,0.99997],[29951,0.999971],[30463,0.999972],[30975,0.999973],[31487,0.999974],[32767,0.999975],[33791,0.999976],[34815,0.999977],[36863,0.999978],[38399,0.999979],[39423,0.999979],[40959,0.99998],[43519,0.999981],[47103,0.999981],[52223,0.999982],[55807,0.999982],[58367,0.999983],[59903,0.999983],[65023,0.999984],[70655,0.999984],[73727,0.999985],[78847,0.999986],[80895,0.999987],[83967,0.999988],[91135,0.999988],[96255,0.999989],[100351,0.99999],[104447,0.99999],[108543,0.999991],[111615,0.999992],[114687,0.999992],[116735,0.999993],[118783,0.999993],[121855,0.999994],[130047,0.999994],[147455,0.999995],[153599,0.999995],[204799,0.999996],[235519,0.999996],[327679,0.999997],[339967,0.999997],[372735,0.999997],[401407,0.999997],[417791,0.999997],[454655,0.999998],[532479,0.999998],[655359,0.999998],[671743,0.999998],[688127,0.999999],[868351,0.999999],[1048575,0.999999],[1114111,0.999999],[1212415,1.0],[2162687,1.0],[4718591,1.0]]},"D":{"count":158273361,"p50":231,"p90":423,"p99":631,"p999":975,"max":20179126,"cdf":[[10,0.000598],[40,0.060509],[80,0.186589],[110,0.250237],[151,0.333452],[191,0.422853],[221,0.491929],[263,0.586004],[303,0.687506],[331,0.762836],[371,0.843857],[411,0.89481],[443,0.923678],[483,0.95172],[511,0.964926],[551,0.97653],[591,0.984537],[623,0.988959],[663,0.992849],[703,0.995208],[735,0.996382],[775,0.997389],[815,0.997951],[847,0.998204],[887,0.998415],[927,0.998545],[951,0.998612],[991,0.998678],[1023,0.998716],[1087,0.998773],[1151,0.998814],[1199,0.99884],[1263,0.998868],[1327,0.998886],[1375,0.998898],[1439,0.998911],[1503,0.998932],[1551,0.998948],[1615,0.998989],[1663,0.999026],[1727,0.99908],[1791,0.999143],[1839,0.999199],[1903,0.999283],[1967,0.999352],[2015,0.999408],[2111,0.999499],[2239,0.999589],[2335,0.999628],[2463,0.999655],[2591,0.999671],[2687,0.999678],[2815,0.999685],[2911,0.999689],[3039,0.999693],[3167,0.999697],[3263,0.999699],[3391,0.999702],[3519,0.999705],[3615,0.999707],[3743,0.999709],[3871,0.999712],[3967,0.999713],[4095,0.999715],[4351,0.999717],[4543,0.999718],[4799,0.999719],[4991,0.999719],[5247,0.99972],[5503,0.999721],[5695,0.999722],[5951,0.999722],[6207,0.999722],[6399,0.999723],[6655,0.999726],[6911,0.999735],[7103,0.999742],[7359,0.999747],[7551,0.999749],[7807,0.999752],[8063,0.999756],[8319,0.999759],[8831,0.999768],[9343,0.999784],[9727,0.999795],[10239,0.999808],[10751,0.999819],[11135,0.999827],[11647,0.999837],[12159,0.999846],[12543,0.999854],[13055,0.999863],[13439,0.999871],[13951,0.99988],[14463,0.999888],[14847,0.999892],[15359,0.999898],[15871,0.999902],[16255,0.999905],[17151,0.999909],[18175,0.999914],[18943,0.999917],[19967,0.999922],[20991,0.999929],[21759,0.999934],[22783,0.999939],[23551,0.999943],[24575,0.999948],[25599,0.999952],[26367,0.999955],[27391,0.999958],[28415,0.999961],[29183,0.999962],[30207,0.999964],[31231,0.999965],[31999,0.999967],[33279,0.999968],[34815,0.99997],[36863,0.999971],[38911,0.999973],[40447,0.999974],[42495,0.999975],[44543,0.999976],[46079,0.999977],[48127,0.999977],[50175,0.999978],[51711,0.999979],[53759,0.999979],[55807,0.99998],[57343,0.99998],[59391,0.999981],[60927,0.999981],[62975,0.999982],[65023,0.999982],[67583,0.999983],[71679,0.999984],[75775,0.999985],[78847,0.999985],[82943,0.999986],[87039,0.999987],[90111,0.999988],[94207,0.999989],[98303,0.999989],[101375,0.99999],[105471,0.99999],[108543,0.999991],[112639,0.999991],[116735,0.999992],[119807,0.999992],[123903,0.999993],[127999,0.999993],[131071,0.999993],[139263,0.999994],[147455,0.999994],[153599,0.999995],[161791,0.999995],[167935,0.999995],[176127,0.999995],[184319,0.999996],[190463,0.999996],[198655,0.999996],[206847,0.999996],[212991,0.999996],[221183,0.999996],[229375,0.999996],[237567,0.999996],[245759,0.999996],[255999,0.999997],[266239,0.999997],[286719,0.999997],[299007,0.999997],[315391,0.999997],[331775,0.999997],[344063,0.999997],[360447,0.999997],[376831,0.999997],[389119,0.999997],[405503,0.999997],[421887,0.999997],[434175,0.999998],[450559,0.999998],[466943,0.999998],[479231,0.999998],[495615,0.999998],[516095,0.999998],[540671,0.999998],[573439,0.999998],[606207,0.999998],[638975,0.999998],[671743,0.999998],[696319,0.999999],[729087,0.999999],[770047,0.999999],[811007,0.999999],[843775,0.999999],[868351,0.999999],[901119,0.999999],[933887,0.999999],[966655,0.999999],[1023999,0.999999],[1064959,0.999999],[1114111,0.999999],[1179647,0.999999],[1261567,0.999999],[1327103,0.999999],[1409023,1.0],[1490943,1.0],[1572863,1.0],[1671167,1.0],[1769471,1.0],[1884159,1.0],[2097151,1.0],[2228223,1.0],[2424831,1.0],[2654207,1.0],[2818047,1.0],[3178495,1.0],[3244031,1.0],[3276799,1.0],[3309567,1.0],[3407871,1.0],[3506175,1.0],[3637247,1.0],[3735551,1.0],[4194303,1.0],[4653055,1.0],[5177343,1.0],[5701631,1.0],[6094847,1.0],[7929855,1.0],[10616831,1.0]]},"U":{"count":27222746,"p50":463,"p90":927,"p99":1887,"p999":4031,"max":5652429,"cdf":[[30,3.6e-05],[60,0.015798],[90,0.053547],[131,0.078354],[161,0.089381],[191,0.107264],[231,0.189503],[263,0.243087],[291,0.284935],[331,0.335274],[363,0.373852],[403,0.425705],[431,0.46435],[463,0.50312],[503,0.555883],[535,0.594912],[567,0.631625],[607,0.676702],[631,0.707877],[671,0.745591],[703,0.771086],[735,0.794401],[775,0.822546],[807,0.84158],[831,0.858873],[871,0.879251],[903,0.892658],[943,0.908205],[975,0.918247],[1007,0.927014],[1055,0.939129],[1103,0.948728],[1151,0.954944],[1215,0.963346],[1263,0.96796],[1327,0.972373],[1375,0.97533],[1423,0.977817],[1487,0.980333],[1535,0.982129],[1583,0.983693],[1647,0.985351],[1695,0.986577],[1759,0.98787],[1807,0.988825],[1855,0.989692],[1919,0.990618],[1967,0.991307],[2015,0.991942],[2111,0.992947],[2207,0.9939],[2335,0.994957],[2431,0.995568],[2527,0.996154],[2655,0.996811],[2751,0.997202],[2847,0.997572],[2975,0.997949],[3071,0.998152],[3167,0.998332],[3295,0.998495],[3391,0.998606],[3519,0.998722],[3615,0.998788],[3711,0.99885],[3839,0.99892],[3935,0.998963],[4031,0.999007],[4223,0.999078],[4415,0.999137],[4671,0.999213],[4863,0.999255],[5055,0.999286],[5311,0.999315],[5503,0.999331],[5695,0.999342],[5951,0.999355],[6143,0.999362],[6399,0.999369],[6591,0.999375],[6783,0.999384],[7039,0.999399],[7231,0.999413],[7423,0.999424],[7679,0.999435],[7871,0.999441],[8127,0.99945],[8447,0.999459],[8831,0.99947],[9343,0.999493],[9727,0.999517],[10111,0.999538],[10623,0.999564],[11007,0.999582],[11519,0.999604],[11903,0.99962],[12287,0.999635],[12799,0.999659],[13183,0.999674],[13567,0.999689],[14079,0.99971],[14463,0.999726],[14975,0.999744],[15359,0.999754],[15743,0.999763],[16255,0.999773],[16895,0.999784],[17663,0.999794],[18687,0.999804],[19455,0.999811],[20479,0.999823],[21247,0.999834],[22015,0.999844],[23039,0.999857],[23807,0.999865],[24575,0.999874],[25599,0.999884],[26367,0.999892],[27135,0.999899],[28159,0.999906],[28927,0.99991],[29951,0.999914],[30719,0.999918],[31487,0.99992],[32511,0.999924],[33791,0.999928],[35327,0.999932],[37375,0.999937],[38911,0.999939],[40959,0.999942],[42495,0.999944],[44031,0.999945],[46079,0.999947],[47615,0.999949],[49151,0.99995],[51199,0.999951],[52735,0.999952],[54783,0.999953],[56319,0.999955],[57855,0.999956],[59903,0.999957],[61439,0.999958],[62975,0.999959],[65023,0.99996],[67583,0.999961],[71679,0.999963],[74751,0.999964],[77823,0.999965],[81919,0.999967],[84991,0.999969],[88063,0.99997],[92159,0.999972],[95231,0.999973],[99327,0.999976],[102399,0.999977],[105471,0.999978],[109567,0.999979],[112639,0.99998],[115711,0.999981],[119807,0.999982],[122879,0.999983],[126975,0.999983],[130047,0.999984],[135167,0.999985],[143359,0.999986],[149503,0.999987],[155647,0.999987],[163839,0.999988],[169983,0.999988],[176127,0.999989],[184319,0.999989],[190463,0.999989],[202751,0.99999],[210943,0.99999],[219135,0.99999],[227327,0.999991],[233471,0.999991],[239615,0.999992],[247807,0.999992],[260095,0.999992],[282623,0.999992],[294911,0.999992],[319487,0.999993],[344063,0.999993],[368639,0.999993],[397311,0.999993],[417791,0.999993],[430079,0.999994],[446463,0.999994],[458751,0.999994],[471039,0.999994],[516095,0.999995],[540671,0.999995],[614399,0.999995],[663551,0.999995],[688127,0.999995],[729087,0.999996],[761855,0.999996],[802815,0.999996],[851967,0.999996],[876543,0.999997],[901119,0.999997],[950271,0.999997],[991231,0.999997],[1064959,0.999997],[1114111,0.999998],[1163263,0.999998],[1228799,0.999998],[1277951,0.999998],[1327103,0.999998],[1523711,0.999999],[1605631,0.999999],[1835007,0.999999],[1966079,0.999999],[2129919,0.999999],[2293759,0.999999],[2490367,0.999999],[2523135,1.0],[2752511,1.0],[2785279,1.0],[2818047,1.0],[2850815,1.0],[2949119,1.0],[3178495,1.0],[3211263,1.0],[3866623,1.0],[4325375,1.0],[4718591,1.0],[5046271,1.0],[5111807,1.0],[5570559,1.0]]}},"timer":{"p50":10,"p90":20,"p99":20,"p999":20,"max":36369},"pipeline":{"unpaced_full_day":{"rate":{"median":2343370.0,"min":775238,"max":2984850.0,"runs":[2418230.0,2070120.0,775238,2984850.0,2343370.0]},"p50":22020095,"p90":29097983,"p99":39321599,"p999":61865983,"max":158179092,"cdf":[[165,0.0],[215,0.0],[267,0.0],[327,0.0],[375,0.0],[427,1e-06],[487,1e-06],[543,1e-06],[599,1e-06],[647,1e-06],[703,2e-06],[759,2e-06],[807,2e-06],[871,2e-06],[919,2e-06],[967,2e-06],[1039,2e-06],[1119,3e-06],[1215,3e-06],[1295,3e-06],[1375,3e-06],[1471,4e-06],[1551,4e-06],[1631,4e-06],[1727,5e-06],[1807,5e-06],[1903,5e-06],[1983,6e-06],[2079,6e-06],[2271,7e-06],[2431,7e-06],[2623,8e-06],[2783,9e-06],[2943,9e-06],[3135,1e-05],[3295,1e-05],[3487,1.1e-05],[3647,1.2e-05],[3807,1.2e-05],[3999,1.3e-05],[4223,1.4e-05],[4607,1.5e-05],[4927,1.6e-05],[5247,1.8e-05],[5631,1.9e-05],[5951,2e-05],[6271,2.1e-05],[6655,2.3e-05],[6975,2.4e-05],[7359,2.6e-05],[7679,2.7e-05],[7999,2.8e-05],[8575,3e-05],[9215,3.2e-05],[9983,3.5e-05],[10623,3.8e-05],[11263,4e-05],[12031,4.3e-05],[12671,4.6e-05],[13439,4.9e-05],[14079,5.1e-05],[14719,5.4e-05],[15487,5.7e-05],[16127,5.9e-05],[17407,6.4e-05],[18687,7e-05],[19967,7.5e-05],[21503,8.1e-05],[22783,8.7e-05],[24063,9.2e-05],[25599,9.8e-05],[26879,0.000104],[28415,0.000111],[29695,0.000116],[30975,0.000122],[32511,0.000129],[34815,0.00014],[37887,0.000154],[40447,0.000167],[43007,0.000179],[46079,0.000194],[48639,0.000207],[51711,0.000222],[54271,0.000234],[56831,0.000246],[59903,0.00026],[62463,0.000272],[65535,0.000286],[70655,0.00031],[75775,0.000335],[81919,0.000364],[87039,0.000388],[92159,0.000412],[98303,0.000442],[103423,0.000466],[109567,0.000495],[114687,0.00052],[119807,0.000544],[125951,0.000574],[131071,0.000599],[143359,0.000659],[153599,0.000709],[163839,0.00076],[176127,0.000822],[186367,0.000873],[198655,0.000935],[208895,0.000987],[219135,0.00104],[231423,0.001103],[241663,0.001156],[253951,0.00122],[266239,0.001284],[286719,0.001391],[311295,0.001521],[331775,0.001627],[352255,0.001732],[376831,0.001859],[397311,0.001966],[421887,0.002095],[442367,0.002203],[462847,0.002312],[487423,0.002441],[507903,0.002548],[540671,0.002717],[581631,0.002931],[622591,0.003145],[671743,0.003403],[712703,0.003615],[761855,0.003873],[802815,0.004086],[843775,0.004298],[892927,0.004554],[933887,0.004764],[974847,0.004976],[1023999,0.005228],[1081343,0.005523],[1179647,0.006033],[1261567,0.006454],[1343487,0.006872],[1441791,0.007371],[1523711,0.007807],[1622015,0.008331],[1703935,0.008766],[1785855,0.009199],[1884159,0.009727],[1966079,0.010174],[2064383,0.010713],[2195455,0.011423],[2359295,0.01232],[2555903,0.013397],[2719743,0.014302],[2916351,0.015405],[3080191,0.016326],[3244031,0.017231],[3440639,0.01832],[3604479,0.019251],[3768319,0.020177],[3964927,0.021308],[4128767,0.022254],[4456447,0.024132],[4784127,0.025985],[5111807,0.027791],[5505023,0.02994],[5832703,0.031726],[6225919,0.033862],[6553599,0.035634],[6881279,0.037422],[7274495,0.039566],[7602175,0.041332],[7995391,0.04331],[8323071,0.044711],[8912895,0.046672],[9699327,0.048507],[10354687,0.049648],[11141119,0.050939],[11796479,0.052039],[12451839,0.053896],[13238271,0.06368],[13893631,0.067779],[14548991,0.070746],[15335423,0.07303],[15990783,0.074729],[16777215,0.07681],[18087935,0.081725],[19398655,0.104706],[20971519,0.344198],[22282239,0.579913],[23855103,0.767757],[25165823,0.856435],[26476543,0.885265],[28049407,0.893624],[29360127,0.896067],[30932991,0.897851],[32243711,0.898785],[33554431,0.899464],[36700159,0.900791],[39321599,0.901707],[42467327,0.902654],[45088767,0.90375],[47710207,0.904923],[50855935,0.907284],[53477375,0.910157],[56098815,0.914003],[59244543,0.919157],[61865983,0.923],[65011711,0.927752],[68157439,0.934884],[73400319,0.956986],[79691775,0.980794],[84934655,0.986736],[91226111,0.991672],[96468991,0.99608],[101711871,0.998363],[108003327,0.999317],[113246207,0.999607],[119537663,0.999738],[124780543,0.999887],[130023423,0.999914],[132120575,0.999923],[133169151,0.999927],[134217727,0.99993],[136314879,0.999936],[138412031,0.999946],[140509183,0.99995],[142606335,0.999955],[144703487,0.999962],[146800639,0.999967],[148897791,0.999972],[150994943,0.999976],[153092095,0.999981],[155189247,0.999989],[157286399,0.999995],[159383551,1.0]]},"paced_1000000_per_second":{"rate":{"median":999960,"min":988128,"max":999963,"runs":[988128,999963,999959,999961,999960]},"p50":411,"p90":743,"p99":15615,"p999":102760447,"max":132378997,"cdf":[[40,0.0],[91,8e-06],[141,0.000766],[201,0.02041],[251,0.100828],[303,0.234144],[363,0.402608],[411,0.506691],[471,0.634374],[527,0.721175],[575,0.786383],[639,0.844226],[687,0.87587],[743,0.90167],[799,0.916271],[847,0.926847],[903,0.936223],[959,0.942006],[1015,0.947336],[1087,0.953914],[1167,0.960343],[1263,0.964975],[1343,0.967327],[1423,0.969073],[1519,0.970628],[1599,0.97175],[1695,0.972928],[1775,0.973742],[1855,0.974462],[1951,0.975173],[2031,0.975727],[2207,0.976927],[2367,0.977787],[2527,0.978516],[2719,0.979259],[2879,0.979797],[3071,0.980359],[3231,0.980819],[3391,0.981229],[3583,0.981676],[3743,0.982014],[3935,0.982386],[4095,0.98268],[4415,0.983227],[4799,0.983834],[5119,0.984271],[5439,0.984701],[5823,0.985196],[6143,0.985581],[6527,0.986011],[6847,0.986352],[7167,0.986672],[7551,0.987039],[7871,0.987336],[8319,0.987729],[8959,0.988259],[9599,0.988638],[10367,0.988933],[11007,0.989136],[11775,0.989352],[12415,0.989507],[13055,0.989642],[13823,0.989778],[14463,0.989876],[15231,0.989972],[15871,0.990034],[16639,0.990095],[18175,0.990199],[19455,0.990265],[20735,0.990315],[22271,0.990366],[23551,0.9904],[25087,0.990437],[26367,0.990463],[27647,0.99049],[29183,0.990519],[30463,0.990542],[31999,0.990568],[33791,0.990594],[36351,0.990626],[39423,0.990659],[41983,0.990685],[45055,0.990714],[47615,0.990742],[50175,0.990763],[53247,0.990787],[55807,0.990806],[58879,0.990828],[61439,0.990847],[63999,0.990868],[68607,0.990902],[73727,0.990935],[78847,0.990971],[84991,0.991005],[90111,0.991027],[96255,0.991051],[101375,0.99107],[106495,0.991089],[112639,0.991111],[117759,0.991127],[123903,0.991145],[129023,0.991161],[137215,0.991183],[149503,0.991213],[159743,0.991229],[172031,0.991247],[182271,0.991259],[192511,0.991271],[204799,0.991285],[215039,0.991298],[227327,0.991311],[237567,0.991323],[247807,0.991333],[260095,0.991345],[278527,0.991363],[299007,0.99138],[323583,0.991395],[344063,0.991407],[368639,0.991421],[389119,0.991433],[409599,0.991447],[434175,0.991462],[454655,0.991471],[479231,0.99148],[499711,0.991488],[520191,0.991493],[565247,0.991499],[606207,0.991503],[655359,0.991509],[696319,0.991514],[737279,0.991517],[786431,0.991523],[827391,0.991529],[868351,0.991533],[917503,0.991538],[958463,0.991542],[1007615,0.991548],[1048575,0.991552],[1130495,0.99156],[1228799,0.991571],[1310719,0.991578],[1409023,0.991595],[1490943,0.991685],[1572863,0.991709],[1671167,0.991717],[1753087,0.991721],[1851391,0.991726],[1933311,0.99173],[2015231,0.991752],[2129919,0.991775],[2293759,0.991813],[2490367,0.99185],[2654207,0.991859],[2818047,0.991868],[3014655,0.991881],[3178495,0.991892],[3342335,0.991901],[3538943,0.991913],[3702783,0.991923],[3899391,0.99194],[4063231,0.99195],[4259839,0.991962],[4653055,0.991989],[4980735,0.992009],[5373951,0.99221],[5701631,0.99235],[6029311,0.992436],[6422527,0.992481],[6750207,0.992539],[7143423,0.992614],[7471103,0.992667],[7798783,0.992719],[8191999,0.992765],[8650751,0.992817],[9437183,0.99289],[10092543,0.992961],[10747903,0.993011],[11534335,0.993081],[12189695,0.993129],[12845055,0.99318],[13631487,0.99323],[14286847,0.993285],[15073279,0.993336],[15728639,0.993376],[16383999,0.993416],[17563647,0.993496],[18874367,0.993626],[20447231,0.994223],[21757951,0.994967],[23068671,0.995661],[24641535,0.996684],[25952255,0.996832],[27525119,0.996912],[28835839,0.99697],[30146559,0.99703],[31719423,0.997098],[33030143,0.997173],[35651583,0.997277],[38273023,0.997401],[40894463,0.997505],[44040191,0.997566],[46661631,0.997632],[49283071,0.997709],[52428799,0.997821],[55050239,0.997915],[58195967,0.997991],[60817407,0.998063],[63438847,0.998144],[66584575,0.998226],[71303167,0.998337],[77594623,0.998475],[82837503,0.998576],[88080383,0.998692],[94371839,0.998815],[99614719,0.998934],[105906175,0.999058],[111149055,0.999168],[116391935,0.99929],[118489087,0.999378],[119537663,0.999419],[120586239,0.999464],[121634815,0.999504],[122683391,0.999551],[123731967,0.999608],[124780543,0.999651],[125829119,0.999693],[126877695,0.999741],[127926271,0.999786],[128974847,0.999826],[130023423,0.999867],[131071999,0.999921],[132120575,0.999988],[133169151,1.0]]},"paced_2000000_per_second":{"rate":{"median":1999830.0,"min":1999830.0,"max":1999850.0,"runs":[1999830.0,1999840.0,1999830.0,1999830.0,1999850.0]},"p50":471,"p90":2911,"p99":24641535,"p999":123731967,"max":156947138,"cdf":[[50,1e-06],[101,6e-06],[151,0.001423],[211,0.024661],[263,0.109478],[323,0.256729],[371,0.356275],[431,0.446583],[483,0.515528],[543,0.581741],[591,0.639015],[655,0.698493],[703,0.73201],[767,0.758932],[815,0.775848],[879,0.792017],[927,0.803028],[983,0.813928],[1039,0.821934],[1135,0.837117],[1215,0.846559],[1311,0.854558],[1391,0.860335],[1471,0.865191],[1567,0.870384],[1647,0.874142],[1743,0.877754],[1823,0.880491],[1919,0.883468],[1999,0.885538],[2143,0.888793],[2303,0.891904],[2495,0.895057],[2655,0.897262],[2847,0.899525],[3007,0.901202],[3199,0.903021],[3359,0.9044],[3551,0.90589],[3711,0.907062],[3903,0.908344],[4063,0.909348],[4415,0.9114],[4735,0.91309],[5119,0.914922],[5439,0.916372],[5759,0.917734],[6143,0.919305],[6463,0.920518],[6847,0.921892],[7167,0.922994],[7551,0.924248],[7871,0.925252],[8319,0.926598],[8959,0.928406],[9727,0.930239],[10367,0.931478],[11135,0.932742],[11775,0.933677],[12543,0.934679],[13183,0.935444],[13951,0.936261],[14591,0.936882],[15359,0.937525],[15999,0.937991],[17151,0.938718],[18431,0.939403],[19711,0.939982],[21247,0.940583],[22527,0.941008],[24063,0.941439],[25343,0.941755],[26879,0.942106],[28159,0.942361],[29695,0.942604],[30975,0.942762],[32511,0.942926],[34815,0.943138],[37887,0.943388],[40447,0.943546],[43519,0.943722],[46079,0.943853],[49151,0.943997],[51711,0.944099],[54783,0.944205],[57343,0.944282],[60415,0.944379],[62975,0.944455],[66559,0.944551],[71679,0.94469],[76799,0.944805],[82943,0.944929],[88063,0.945023],[94207,0.945125],[99327,0.945206],[105471,0.945309],[110591,0.945395],[116735,0.945506],[121855,0.945588],[127999,0.945673],[135167,0.945771],[147455,0.945927],[157695,0.946025],[169983,0.946144],[180223,0.946232],[192511,0.946321],[202751,0.9464],[215039,0.946501],[225279,0.946579],[237567,0.946681],[247807,0.94676],[258047,0.946848],[278527,0.946964],[299007,0.947131],[323583,0.947335],[344063,0.947464],[368639,0.947601],[389119,0.94769],[413695,0.947779],[434175,0.947868],[458751,0.947985],[479231,0.948107],[503807,0.948251],[524287,0.948382],[573439,0.948654],[614399,0.949002],[663551,0.949289],[704511,0.949379],[753663,0.949464],[794623,0.949579],[843775,0.949699],[884735,0.949742],[933887,0.94978],[974847,0.949816],[1015807,0.949869],[1081343,0.949899],[1163263,0.950014],[1261567,0.95011],[1343487,0.950168],[1441791,0.950226],[1523711,0.950288],[1622015,0.950375],[1703935,0.950431],[1802239,0.950497],[1884159,0.950567],[1982463,0.950631],[2064383,0.950712],[2228223,0.95078],[2392063,0.950817],[2588671,0.950864],[2752511,0.950917],[2949119,0.950972],[3112959,0.951005],[3309567,0.951062],[3473407,0.95109],[3637247,0.951151],[3833855,0.951193],[3997695,0.951222],[4194303,0.951253],[4521983,0.951316],[4915199,0.951398],[5242879,0.9515],[5636095,0.951566],[5963775,0.951604],[6356991,0.951658],[6684671,0.95172],[7077887,0.95178],[7405567,0.951845],[7798783,0.951932],[8126463,0.952009],[8650751,0.952111],[9306111,0.952252],[10092543,0.952399],[10747903,0.952513],[11534335,0.952659],[12189695,0.952771],[12976127,0.952909],[13631487,0.953013],[14286847,0.953132],[15073279,0.953295],[15728639,0.953384],[16515071,0.953512],[17563647,0.953663],[19136511,0.953968],[20447231,0.954473],[22020095,0.955521],[23330815,0.978133],[24903679,0.992125],[26214399,0.992681],[27787263,0.993765],[29097983,0.99386],[30670847,0.993943],[31981567,0.994002],[33554431,0.994079],[36175871,0.994192],[39321599,0.994329],[41943039,0.994431],[45088767,0.994492],[47710207,0.994537],[50331647,0.994592],[53477375,0.99467],[56098815,0.994722],[59244543,0.99483],[61865983,0.994917],[65011711,0.995019],[68157439,0.995156],[74448895,0.995353],[79691775,0.995506],[85983231,0.996862],[91226111,0.99754],[97517567,0.998095],[102760447,0.998325],[109051903,0.99852],[114294783,0.998607],[120586239,0.99868],[125829119,0.998736],[132120575,0.998881],[140509183,0.999189],[144703487,0.999278],[146800639,0.999346],[148897791,0.999406],[150994943,0.99947],[153092095,0.999537],[155189247,0.999588],[157286399,0.999647],[159383551,0.999694],[161480703,0.999729],[163577855,0.999765],[165675007,0.999813],[167772159,0.999856],[169869311,0.999893],[171966463,0.999941],[174063615,1.0]]}},"match":{"orders_per_second":{"median":4936580.0,"min":4909700.0,"max":5008600.0,"runs":[4909700.0,4936580.0,5008600.0,4988700.0,4936220.0]},"orders":20000000,"trades":2488278,"p50":70,"p90":201,"p99":323,"p999":591,"max":342198197,"cdf":[[10,0.000615],[20,0.018692],[40,0.133825],[60,0.39362],[80,0.718123],[90,0.762068],[110,0.801673],[131,0.827575],[151,0.845785],[161,0.854059],[181,0.877834],[201,0.910446],[221,0.945386],[231,0.959092],[251,0.973823],[271,0.981089],[291,0.985682],[303,0.987573],[323,0.990572],[343,0.992707],[363,0.99422],[371,0.994785],[391,0.995656],[411,0.996318],[431,0.996891],[443,0.997148],[463,0.997586],[483,0.997938],[503,0.99823],[511,0.998352],[535,0.998563],[551,0.998751],[575,0.998922],[583,0.998996],[607,0.999127],[623,0.999231],[647,0.999322],[655,0.999363],[671,0.999437],[695,0.999501],[711,0.999556],[727,0.999581],[743,0.999627],[767,0.999668],[783,0.999701],[791,0.999715],[815,0.999741],[831,0.999763],[855,0.999779],[863,0.999787],[887,0.999799],[903,0.999809],[927,0.999818],[935,0.999822],[951,0.999829],[975,0.999835],[991,0.99984],[1007,0.999843],[1023,0.999847],[1055,0.999852],[1087,0.999856],[1103,0.999858],[1135,0.999861],[1167,0.999863],[1199,0.999865],[1215,0.999866],[1247,0.999868],[1279,0.999869],[1311,0.99987],[1327,0.99987],[1359,0.999871],[1391,0.999872],[1423,0.999872],[1439,0.999873],[1471,0.999873],[1503,0.999873],[1535,0.999874],[1551,0.999874],[1583,0.999874],[1615,0.999875],[1663,0.999875],[1695,0.999875],[1743,0.999875],[1775,0.999876],[1807,0.999876],[1823,0.999876],[1871,0.999876],[1903,0.999877],[1951,0.999878],[1967,0.999878],[1999,0.999879],[2031,0.99988],[2079,0.999881],[2111,0.999882],[2175,0.999884],[2239,0.999886],[2303,0.999888],[2335,0.999888],[2399,0.999889],[2463,0.99989],[2527,0.999891],[2559,0.999891],[2623,0.999892],[2687,0.999892],[2751,0.999893],[2783,0.999893],[2847,0.999894],[2911,0.999895],[2975,0.999896],[3007,0.999896],[3071,0.999897],[3135,0.999898],[3199,0.999898],[3231,0.999898],[3327,0.999899],[3391,0.999899],[3455,0.999899],[3487,0.9999],[3551,0.9999],[3615,0.999901],[3679,0.999901],[3711,0.999901],[3775,0.999902],[3839,0.999902],[3903,0.999902],[3935,0.999903],[3999,0.999903],[4063,0.999904],[4159,0.999904],[4223,0.999904],[4351,0.999905],[4479,0.999906],[4607,0.999906],[4671,0.999907],[4927,0.999907],[5247,0.999907],[5375,0.999907],[5503,0.999907],[5951,0.999907],[6207,0.999907],[6335,0.999908],[6399,0.999908],[6527,0.999908],[6655,0.999909],[6783,0.999909],[6847,0.999909],[6975,0.99991],[7103,0.999911],[7231,0.999913],[7295,0.999914],[7423,0.999914],[7551,0.999915],[7679,0.999916],[7743,0.999917],[7871,0.999919],[7999,0.999926],[8127,0.999935],[8191,0.999939],[8447,0.999956],[8703,0.999963],[8959,0.999969],[9087,0.999972],[9343,0.999976],[9599,0.999978],[9855,0.999981],[9983,0.999983],[10239,0.999984],[10495,0.999985],[10751,0.999985],[10879,0.999985],[11263,0.999986],[11519,0.999986],[11775,0.999986],[11903,0.999986],[12159,0.999986],[12415,0.999987],[12671,0.999987],[12799,0.999987],[13055,0.999988],[13439,0.999988],[13695,0.999988],[13823,0.999989],[14079,0.999989],[14463,0.999989],[14975,0.999989],[15103,0.999989],[15487,0.99999],[15743,0.99999],[15999,0.99999],[16127,0.99999],[16639,0.999991],[17151,0.999991],[17919,0.999991],[18175,0.999992],[18687,0.999992],[19199,0.999992],[19711,0.999992],[19967,0.999992],[20991,0.999992],[25855,0.999993],[26623,0.999993],[28159,0.999993],[82943,0.999993],[109567,0.999993],[909311,0.999993],[917503,0.999993],[933887,0.999993],[950271,0.999994],[966655,0.999995],[974847,0.999996],[991231,0.999997],[1007615,0.999998],[1015807,0.999998],[1023999,0.999998],[1032191,0.999999],[1040383,0.999999],[1048575,0.999999],[1064959,0.999999],[1081343,1.0],[1097727,1.0],[1114111,1.0],[1163263,1.0],[1277951,1.0],[38273023,1.0],[74448895,1.0],[148897791,1.0],[343932927,1.0]]},"micro":{"BM_MapInsert<Custom>":{"unit":"ms","real_time":{"median":29.169942857021983,"min":24.902857142803573,"max":37.811828571713185,"runs":[25.806096428628475,24.902857142803573,29.169942857021983,31.789889286041475,37.811828571713185]}},"BM_MapInsert<Std>":{"unit":"ms","real_time":{"median":404.3562999995629,"min":386.40789999953995,"max":415.3321000003416,"runs":[415.3321000003416,393.5598999996728,386.40789999953995,404.3562999995629,409.92369999912626]}},"BM_MapLookupHit<Custom>":{"unit":"ns","real_time":{"median":8.317166480745506,"min":7.674717822882252,"max":9.645957546216703,"runs":[9.645957546216703,8.317166480745506,7.674717822882252,8.97477183493125,7.974510232258765]}},"BM_MapLookupHit<Std>":{"unit":"ns","real_time":{"median":55.93213392850365,"min":50.15271428565679,"max":58.849517857067575,"runs":[50.15271428565679,53.72504464276063,57.27950000001718,58.849517857067575,55.93213392850365]}},"BM_MapLookupMiss<Custom>":{"unit":"ns","real_time":{"median":27.637562500006297,"min":26.923571428564436,"max":29.699142857160563,"runs":[26.923571428564436,27.336401785760245,29.699142857160563,29.041312499933674,27.637562500006297]}},"BM_MapLookupMiss<Std>":{"unit":"ns","real_time":{"median":49.58191776923733,"min":49.06326591739162,"max":56.88975776368784,"runs":[49.58191776923733,49.06326591739162,49.19560558330579,56.88975776368784,54.5281976757819]}},"BM_MapChurn<Custom>":{"unit":"ns","real_time":{"median":244.3358432657203,"min":193.33681994005943,"max":253.3628623478367,"runs":[193.33681994005943,245.8562002390759,237.0649288993834,244.3358432657203,253.3628623478367]}},"BM_MapChurn<Std>":{"unit":"ns","real_time":{"median":963.4021591962387,"min":897.7388849382584,"max":1004.2957570123891,"runs":[1004.2957570123891,963.4021591962387,952.2361373956685,897.7388849382584,978.9775093853472]}},"BM_RingTransfer<me::SpscRing<std::uint64_t>>/consumer_cpu:4/real_time":{"unit":"ms","real_time":{"median":99.84697777791654,"min":91.36916666668387,"max":112.51930000010664,"runs":[112.51930000010664,100.74821111104231,99.84697777791654,95.33874444443629,91.36916666668387]}},"BM_RingTransfer<me::SpscRing<std::uint64_t>>/consumer_cpu:18/real_time":{"unit":"ms","real_time":{"median":204.12856000002648,"min":198.05908000016643,"max":1379.6917600000597,"runs":[1335.0414600001386,1379.6917600000597,204.12856000002648,198.05908000016643,204.06801999997697]}},"BM_RingTransfer<UnpaddedRing<std::uint64_t>>/consumer_cpu:4/real_time":{"unit":"ms","real_time":{"median":99.94557499999246,"min":96.65534999999181,"max":103.07646250021207,"runs":[96.65534999999181,99.94557499999246,97.28896249998797,103.07646250021207,101.55781250000473]}},"BM_RingTransfer<UnpaddedRing<std::uint64_t>>/consumer_cpu:18/real_time":{"unit":"ms","real_time":{"median":317.85465000029944,"min":289.4786999995631,"max":345.0389500003439,"runs":[317.85465000029944,313.7744000005114,340.89994999976625,345.0389500003439,289.4786999995631]}},"BM_LevelsSortedVector":{"unit":"ns","real_time":{"median":43.041289568223654,"min":40.21191865547241,"max":43.45172571888876,"runs":[43.339910766222964,43.45172571888876,43.041289568223654,42.007774191772896,40.21191865547241]}},"BM_LevelsStdMap":{"unit":"ns","real_time":{"median":92.07379946091719,"min":85.67252296091416,"max":103.47761591614237,"runs":[85.67252296091416,90.53159863703053,92.07379946091719,95.19833950014015,103.47761591614237]}}},"machine":{"cpu":"AMD Ryzen 9 8940HX with Radeon Graphics","cores":16,"logical_processors":32,"ram_bytes":16162496512,"os":"Microsoft Windows 11 Home build 26300","compiler":"Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64","power_plan":"Power Scheme GUID: 381b4222-f694-41f0-9685-ff5bb260df2e  (Balanced)"},"backtest":{"note":"demo of the me_py bindings, not a trading claim (see the fill model)","symbol":"AAPL","step_ms":100,"quote_size":100,"inventory_limit":500,"messages_replayed":149213,"unknown_refs":0,"samples":198289,"fills":198,"buys":99,"sells":99,"final_inventory":0,"final_pnl_dollars_marked_to_mid":-976.0}}</script>
+<script>
+(function () {
+  const D = JSON.parse(document.getElementById("data").textContent);
+  const $ = (id) => document.getElementById(id);
+  const fmt = (n) => Math.round(n).toLocaleString("en-US");
+  const mps = (n) => (n / 1e6).toFixed(n >= 1e7 ? 1 : 2) + "M";
+  const ns = (v) => v >= 1e6 ? (v / 1e6).toFixed(v >= 1e8 ? 0 : 1) + " ms" : v >= 1e3 ? (v / 1e3).toFixed(1) + " µs" : fmt(v) + " ns";
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const svgNS = "http://www.w3.org/2000/svg";
+  const el = (tag, attrs, parent) => { const e = document.createElementNS(svgNS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+
+  // ---- tape
+  const day = D.day, pc = D.pipeline_check;
+  $("tape").innerHTML = [
+    ["Messages replayed", fmt(day.messages), ""],
+    ["Unknown order references", fmt(day.unknown_refs), "good"],
+    ["Threaded vs single-threaded", pc.checkpoints + " / " + pc.checkpoints + " identical", "good"],
+    ["Differential seeds", "10,000", ""],
+  ].map(([l, v, c]) => `<div><span class="label">${l}</span><span class="big ${c}">${v}</span></div>`).join("");
+  $("books").textContent = fmt(day.books);
+  $("ck").textContent = pc.checkpoints;
+  $("bbo").textContent = fmt(pc.bbo_changes);
+  $("peak").textContent = fmt(day.peak_live_orders);
+
+  // ---- message mix
+  const NAMES = { A: "Add order", D: "Delete", U: "Replace", E: "Executed", X: "Cancel", I: "Net order imbalance", F: "Add with MPID", P: "Trade (non-cross)", C: "Executed with price" };
+  const COLORS = { A: "--s1", D: "--s6", U: "--s2", E: "--s3", X: "--s5", I: "--s4", F: "--s7" };
+  const counts = Object.entries(day.counts).sort((a, b) => b[1] - a[1]);
+  const shown = counts.filter(([k]) => COLORS[k]);
+  const other = counts.filter(([k]) => !COLORS[k]).reduce((s, [, v]) => s + v, 0);
+  const total = day.messages;
+  const segs = [...shown.map(([k, v]) => [k, v, `var(${COLORS[k]})`]), ["other", other, "var(--rule)"]];
+  $("mix").innerHTML = segs.map(([k, v, c]) => `<span title="${k}: ${fmt(v)}" style="width:${(100 * v / total).toFixed(3)}%;background:${c}"></span>`).join("");
+  $("legend").innerHTML = segs.map(([k, v, c]) => `<div><i style="background:${c}"></i><span>${k === "other" ? "Other 11 types" : `<span class="mono">${k}</span> ${NAMES[k]}`}</span><span class="num muted">${(100 * v / total).toFixed(v / total < 0.01 ? 2 : 1)}%</span></div>`).join("");
+
+  // ---- crossed episodes (07:00 to 12:00)
+  const toSec = (t) => { const [h, m, s] = t.split(":").map(Number); return h * 3600 + m * 60 + s; };
+  const ep = $("episodes"), x0 = 7 * 3600, x1 = 12 * 3600, W = 960, padL = 60, padR = 20;
+  const X = (s) => padL + (s - x0) / (x1 - x0) * (W - padL - padR);
+  const symbols = [...new Set(day.crossed_episodes_detail.map((e) => e.symbol))];
+  for (let h = 7; h <= 12; h++) {
+    el("line", { x1: X(h * 3600), x2: X(h * 3600), y1: 8, y2: 118, style: "stroke:var(--rule)" }, ep);
+    el("text", { x: X(h * 3600), y: 138, "text-anchor": "middle" }, ep).textContent = String(h).padStart(2, "0") + ":00";
+  }
+  el("line", { x1: X(9.5 * 3600), x2: X(9.5 * 3600), y1: 8, y2: 118, style: "stroke:var(--accent);stroke-dasharray:4 4" }, ep);
+  el("text", { x: X(9.5 * 3600) + 6, y: 18 }, ep).textContent = "09:30 open";
+  symbols.forEach((s, i) => {
+    const y = 30 + i * 24;
+    el("text", { x: 4, y: y + 4 }, ep).textContent = s;
+    day.crossed_episodes_detail.filter((e) => e.symbol === s).forEach((e) => {
+      const a = X(toSec(e.start)), b = Math.max(X(toSec(e.end)), a + 4);
+      el("rect", { x: a, y: y - 7, width: b - a, height: 14, rx: 3, style: `fill:${e.trading_state_at_start === "P" ? "var(--ask)" : "var(--warn)"}` }, ep);
+    });
+  });
+  $("episode-table").querySelector("tbody").innerHTML = day.crossed_episodes_detail.map((e) =>
+    `<tr><td class="mono">${e.symbol}</td><td class="mono">${e.start}</td><td class="mono">${e.end}</td><td><span class="pill ${e.trading_state_at_start === "P" ? "miss" : "warn"}">${e.trading_state_at_start === "P" ? "P paused (LULD)" : "Q quotation only"}</span></td><td class="num">${fmt(e.symbol_messages)}</td></tr>`).join("");
+
+  // ---- performance table
+  const T = D.throughput, M = D.match;
+  const row = (name, med, range, pill, cls) => `<tr><td>${name}</td><td class="num">${med}</td><td class="num muted">${range}</td><td><span class="pill ${cls}">${pill}</span></td></tr>`;
+  const rng = (x, f) => f(x.min) + " to " + f(x.max);
+  $("perf").querySelector("tbody").innerHTML = [
+    row("Parse only, full day (11.2 GB)", mps(T.parse_throughput.median) + " msgs/s", rng(T.parse_throughput, mps), "below tens of millions", "miss"),
+    row("Parse only, 50M messages in memory", mps(T.parse_prefix_throughput.median) + " msgs/s", rng(T.parse_prefix_throughput, mps), "tens of millions: met", "met"),
+    row("Parse and book build, full day", mps(T.book_throughput.median) + " msgs/s", rng(T.book_throughput, mps), "several million: met", "met"),
+    row("Book add, median latency", D.ops.A.p50 + " ns", "p99 " + D.ops.A.p99 + " ns", "under 100 ns: missed", "miss"),
+    row("Pipeline at 1M msgs/s, median", ns(D.pipeline.paced_1000000_per_second.p50), "p99.9 " + ns(D.pipeline.paced_1000000_per_second.p999), "tail reported as measured", "warn"),
+    row("Matching engine", mps(M.orders_per_second.median) + " orders/s", rng(M.orders_per_second, mps), "p50 " + M.p50 + " ns", "info"),
+  ].join("");
+
+  // ---- CDF charts
+  const OPN = { A: "A add", F: "F add with MPID", E: "E execute", C: "C execute with price", X: "X cancel", D: "D delete", U: "U replace" };
+  const OPC = { A: "--s1", F: "--s7", E: "--s3", C: "--s4", X: "--s5", D: "--s6", U: "--s2" };
+  const sets = {
+    ops: { series: Object.entries(D.ops).map(([k, v]) => ({ name: OPN[k], color: OPC[k], v })), note: "Each sample is one book update over the full day, timed with a pair of rdtsc reads that cost about " + D.timer.p50 + " ns themselves. The steps at the left edge are the timer's 10 ns resolution." },
+    pipe: { series: [["paced_1000000_per_second", "Paced at 1M msgs/s", "--s3"], ["paced_2000000_per_second", "Paced at 2M msgs/s", "--s5"], ["unpaced_full_day", "Unpaced full day", "--s6"]].map(([k, n, c]) => ({ name: n, color: c, v: D.pipeline[k] })), note: "Unpaced, the parser outruns the book thread and the 65,536-slot ring stays full, so the roughly 22 ms median is queueing time. Paced runs show the real path: about 0.4 µs at the median, with a long tail from book-thread stalls on an untuned laptop." },
+    match: { series: [{ name: "One request (new, cancel or modify)", color: "--s1", v: M }], note: fmt(M.orders) + " synthetic requests per run, " + fmt(M.trades) + " trades. The engine's working set is small, which is why it is faster than a book update during a full day." },
+  };
+  function drawCdf(key) {
+    const svg = $("cdf"); svg.textContent = "";
+    const set = sets[key], Wc = 960, Hc = 360, L = 56, R = 40, Tp = 14, B = 44;
+    const all = set.series.flatMap((s) => s.v.cdf.map((p) => p[0]));
+    const lo = Math.pow(10, Math.floor(Math.log10(Math.max(1, Math.min(...all))))), hi = Math.pow(10, Math.ceil(Math.log10(Math.max(...all))));
+    const xs = (v) => L + (Math.log10(Math.max(v, lo)) - Math.log10(lo)) / (Math.log10(hi) - Math.log10(lo)) * (Wc - L - R);
+    const ys = (f) => Tp + (1 - f) * (Hc - Tp - B);
+    for (let d = Math.log10(lo); d <= Math.log10(hi); d++) {
+      const x = xs(Math.pow(10, d));
+      el("line", { x1: x, x2: x, y1: Tp, y2: Hc - B, style: "stroke:var(--rule)" }, svg);
+      el("text", { x, y: Hc - B + 18, "text-anchor": "middle" }, svg).textContent = ns(Math.pow(10, d));
+    }
+    [0, 0.25, 0.5, 0.75, 0.9, 1].forEach((f) => {
+      el("line", { x1: L, x2: Wc - R, y1: ys(f), y2: ys(f), style: "stroke:var(--rule);stroke-dasharray:" + (f === 0 || f === 1 ? "0" : "2 4") }, svg);
+      el("text", { x: L - 8, y: ys(f) + 4, "text-anchor": "end" }, svg).textContent = f.toString();
+    });
+    el("text", { x: (L + Wc - R) / 2, y: Hc - 6, "text-anchor": "middle" }, svg).textContent = "latency (log scale), fraction of samples at or below";
+    set.series.forEach((s) => {
+      let d = "", prev = 0;
+      s.v.cdf.forEach(([v, f], i) => { const x = xs(v); d += (i ? `H${x.toFixed(1)}V${ys(f).toFixed(1)}` : `M${x.toFixed(1)},${ys(0).toFixed(1)}V${ys(f).toFixed(1)}`); prev = f; });
+      el("path", { d, style: `fill:none;stroke:var(${s.color});stroke-width:2` }, svg);
+    });
+    $("cdf-table").innerHTML = `<thead><tr><th>Series</th><th class="num">p50</th><th class="num">p90</th><th class="num">p99</th><th class="num">p99.9</th></tr></thead><tbody>` +
+      set.series.map((s) => `<tr><td><span style="display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:8px;background:var(${s.color})"></span>${s.name}</td>${["p50", "p90", "p99", "p999"].map((p) => `<td class="num">${ns(s.v[p])}</td>`).join("")}</tr>`).join("") + "</tbody>";
+    $("cdf-note").textContent = set.note;
+    document.querySelectorAll("[data-chart]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.chart === key)));
+  }
+  document.querySelectorAll("[data-chart]").forEach((b) => b.addEventListener("click", () => drawCdf(b.dataset.chart)));
+  drawCdf("ops");
+
+  // ---- component bars
+  const mi = D.micro;
+  const ring = (impl, cpu) => mi[`BM_RingTransfer<${impl}>/consumer_cpu:${cpu}/real_time`].real_time;
+  function bars(target, groups) {
+    $(target).innerHTML = groups.map((g) => {
+      const max = Math.max(...g.items.map((i) => i.v));
+      return `<div class="bar-row"><div><div style="font-weight:500">${g.name}</div><div class="label">${g.unit}, lower is faster</div></div><div class="tracks">` +
+        g.items.map((i) => `<div class="track"><b title="${esc(i.label)}" style="width:${(100 * i.v / max).toFixed(1)}%;background:var(${i.color})"></b><span class="val">${i.v.toFixed(i.v < 100 ? 1 : 0)}</span></div><div class="label" style="margin-top:-4px">${esc(i.label)}</div>`).join("") + "</div></div>";
+    }).join("");
+  }
+  const mm = (k) => mi[k].real_time.median;
+  bars("map-bars", [
+    { name: "Lookup, id present", unit: "ns", items: [{ label: "custom", v: mm("BM_MapLookupHit<Custom>"), color: "--s1" }, { label: "std::unordered_map", v: mm("BM_MapLookupHit<Std>"), color: "--s7" }] },
+    { name: "Lookup, id absent", unit: "ns", items: [{ label: "custom", v: mm("BM_MapLookupMiss<Custom>"), color: "--s1" }, { label: "std::unordered_map", v: mm("BM_MapLookupMiss<Std>"), color: "--s7" }] },
+    { name: "Delete + insert at 1M live", unit: "ns", items: [{ label: "custom", v: mm("BM_MapChurn<Custom>"), color: "--s1" }, { label: "std::unordered_map", v: mm("BM_MapChurn<Std>"), color: "--s7" }] },
+  ]);
+  bars("other-bars", [
+    { name: "Level churn near the touch", unit: "ns", items: [{ label: "sorted vector", v: mm("BM_LevelsSortedVector"), color: "--s1" }, { label: "std::map", v: mm("BM_LevelsStdMap"), color: "--s7" }] },
+    { name: "10M items, same die", unit: "ms", items: [{ label: "padded ring", v: ring("me::SpscRing<std::uint64_t>", 4).median, color: "--s1" }, { label: "unpadded ring", v: ring("UnpaddedRing<std::uint64_t>", 4).median, color: "--s7" }] },
+    { name: "10M items, other die", unit: "ms", items: [{ label: "padded ring", v: ring("me::SpscRing<std::uint64_t>", 18).median, color: "--s1" }, { label: "unpadded ring", v: ring("UnpaddedRing<std::uint64_t>", 18).median, color: "--s7" }] },
+  ]);
+
+  // ---- backtest + machine
+  $("bt-fills").textContent = fmt(D.backtest.fills);
+  $("bt-pnl").textContent = (D.backtest.final_pnl_dollars_marked_to_mid < 0 ? "-$" : "$") + Math.abs(D.backtest.final_pnl_dollars_marked_to_mid).toFixed(2);
+  const mc = D.machine;
+  $("machine").textContent = `Measured on ${mc.cpu} (${mc.cores} cores, ${mc.logical_processors} threads, ${Math.round(mc.ram_bytes / 2 ** 30)} GB), ${mc.os}, ${mc.compiler.replace("Microsoft (R) C/C++ Optimizing Compiler", "MSVC")}, Balanced power plan. Medians of five runs.`;
+
+  // ---- matching sandbox: port of python/ref_matcher.py
+  class Matcher {
+    constructor() { this.resting = []; this.seq = 0; }
+    find(id) { return this.resting.find((o) => o.id === id); }
+    best(side) {
+      const others = this.resting.filter((o) => o.side !== side);
+      if (!others.length) return null;
+      return others.reduce((b, o) => {
+        const better = side === "B" ? (o.price < b.price || (o.price === b.price && o.seq < b.seq)) : (o.price > b.price || (o.price === b.price && o.seq < b.seq));
+        return better ? o : b;
+      });
+    }
+    enter(id, side, price, qty, kind, out) {
+      while (qty > 0) {
+        const b = this.best(side);
+        if (!b) break;
+        if (kind !== "M" && (side === "B" ? price < b.price : price > b.price)) break;
+        const fill = Math.min(qty, b.qty);
+        out.push(["trade", `${id} takes ${fill} from ${b.id} at ${b.price}`]);
+        qty -= fill; b.qty -= fill;
+        if (b.qty === 0) this.resting.splice(this.resting.indexOf(b), 1);
+      }
+      if (qty === 0) return;
+      if (kind === "L") this.resting.push({ id, side, price, qty, seq: this.seq++ });
+      else out.push(["cancelled", `${id}: ${qty} unfilled (${kind === "I" ? "IOC" : "market"} remainder)`]);
+    }
+    submit(id, side, price, qty, kind, out) {
+      if (qty === 0) out.push(["rejected", `${id}: invalid_quantity`]);
+      else if (kind !== "M" && price === 0) out.push(["rejected", `${id}: invalid_price`]);
+      else if (this.find(id)) out.push(["rejected", `${id}: duplicate_id`]);
+      else if (kind === "M" && !this.best(side)) out.push(["rejected", `${id}: no_liquidity`]);
+      else { out.push(["ack", `${id} ${side === "B" ? "buy" : "sell"} ${qty}${kind === "M" ? " at market" : " @ " + price}`]); this.enter(id, side, price, qty, kind, out); }
+    }
+    cancel(id, out) {
+      const o = this.find(id);
+      if (!o) { out.push(["rejected", `${id}: unknown_order`]); return; }
+      this.resting.splice(this.resting.indexOf(o), 1);
+      out.push(["cancelled", `${id}: ${o.qty} @ ${o.price}`]);
+    }
+    modify(id, price, qty, out) {
+      const o = this.find(id);
+      if (!o) out.push(["rejected", `${id}: unknown_order`]);
+      else if (qty === 0) out.push(["rejected", `${id}: invalid_quantity`]);
+      else if (price === 0) out.push(["rejected", `${id}: invalid_price`]);
+      else {
+        out.push(["ack", `${id} modified to ${qty} @ ${price}`]);
+        if (price === o.price && qty <= o.qty) { o.qty = qty; out.push(["note", `${id} kept its place in the queue`]); }
+        else { this.resting.splice(this.resting.indexOf(o), 1); out.push(["note", `${id} lost priority (cancel and re-add)`]); this.enter(id, o.side, price, qty, "L", out); }
+      }
+    }
+  }
+  let mtx, nextId, log;
+  const seedBook = () => {
+    mtx = new Matcher(); nextId = 1; log = [];
+    const seed = [["S", 10003, 200], ["S", 10002, 120], ["S", 10002, 80], ["S", 10001, 100], ["B", 10000, 150], ["B", 9999, 90], ["B", 9999, 60], ["B", 9998, 300]];
+    const out = [];
+    seed.forEach(([s, p, q]) => mtx.submit(nextId++, s, p, q, "L", out));
+    log.push(["req", "Example book: 8 resting limit orders, ids 1 to 8"]);
+    render();
+  };
+  function render() {
+    const lv = (side) => {
+      const m = new Map();
+      mtx.resting.filter((o) => o.side === side).forEach((o) => { const e = m.get(o.price) || [0, 0]; m.set(o.price, [e[0] + o.qty, e[1] + 1]); });
+      return [...m.entries()].sort((a, b) => side === "S" ? a[0] - b[0] : b[0] - a[0]).slice(0, 6);
+    };
+    const asks = lv("S"), bids = lv("B");
+    const max = Math.max(1, ...asks.map((a) => a[1][0]), ...bids.map((b) => b[1][0]));
+    const r = (cls, [p, [q, n]]) => `<div class="lrow ${cls}"><span class="bg" style="width:${(100 * q / max).toFixed(1)}%"></span><span>${cls === "bid" ? fmt(q) + " · " + n : ""}</span><span class="price">${p}</span><span style="text-align:right">${cls === "ask" ? n + " · " + fmt(q) : ""}</span></div>`;
+    const spread = asks.length && bids.length ? `spread ${asks[0][0] - bids[0][0]} ¢` : "one side empty";
+    $("ladder").innerHTML = (asks.length ? asks.slice().reverse().map((a) => r("ask", a)).join("") : `<div class="empty">No asks</div>`) + `<div class="spread">${spread}</div>` + (bids.length ? bids.map((b) => r("bid", b)).join("") : `<div class="empty">No bids</div>`);
+    $("log").innerHTML = log.slice(-60).map(([k, t]) => k === "req" ? `<div class="req"><span class="k">request</span><span>${esc(t)}</span></div>` : `<div class="ev-${k}"><span class="k">${k}</span><span>${esc(t)}</span></div>`).join("");
+    $("log").scrollTop = $("log").scrollHeight;
+    $("oid").value = nextId;
+  }
+  let side = "B";
+  const setSide = (s) => { side = s; $("side-buy").setAttribute("aria-pressed", String(s === "B")); $("side-sell").setAttribute("aria-pressed", String(s === "S")); };
+  $("side-buy").addEventListener("click", () => setSide("B"));
+  $("side-sell").addEventListener("click", () => setSide("S"));
+  const int = (id) => Math.max(0, Math.floor(Number($(id).value) || 0));
+  $("order-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const id = int("oid"), kind = $("otype").value, price = kind === "M" ? 0 : int("oprice"), qty = int("oqty"), out = [];
+    log.push(["req", `${kind === "L" ? "Limit" : kind === "I" ? "IOC" : "Market"} ${side === "B" ? "buy" : "sell"} id ${id}, ${qty}${kind === "M" ? "" : " @ " + price}`]);
+    mtx.submit(id, side, price, qty, kind, out); log.push(...out);
+    if (id >= nextId) nextId = id + 1;
+    render();
+  });
+  $("cancel-btn").addEventListener("click", () => { const id = int("cid"), out = []; log.push(["req", `Cancel id ${id}`]); mtx.cancel(id, out); log.push(...out); render(); });
+  $("modify-btn").addEventListener("click", () => { const id = int("mid"), out = []; log.push(["req", `Modify id ${id} to ${int("mqty")} @ ${int("mprice")}`]); mtx.modify(id, int("mprice"), int("mqty"), out); log.push(...out); render(); });
+  $("reset-btn").addEventListener("click", seedBook);
+  $("otype").addEventListener("change", () => { $("oprice").disabled = $("otype").value === "M"; });
+  seedBook();
+})();
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" });
+</script>
+</body>
+</html>

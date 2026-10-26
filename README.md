@@ -16,7 +16,7 @@ that was not set up for it.
 
 **Interactive demo:** [`docs/demo/index.html`](docs/demo/index.html), a single page with the
 full-day results, latency charts and a matching sandbox you can type orders into
-([open it in the browser](https://htmlpreview.github.io/?https://github.com/ArnavLifelessCoder/tachyon/blob/main/docs/demo/index.html)).
+(live at [arnavlifelesscoder.github.io/tachyon](https://arnavlifelesscoder.github.io/tachyon/)).
 
 ## Results
 
